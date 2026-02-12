@@ -5,8 +5,13 @@ interface DropZoneProps {
   onFileSelect: (file: File) => void;
 }
 
+const ACCEPT = "image/*,video/*";
+
 const DropZone = ({ onFileSelect }: DropZoneProps) => {
   const [isDragging, setIsDragging] = useState(false);
+
+  const isValidFile = (file: File) =>
+    file.type.startsWith("image/") || file.type.startsWith("video/");
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -31,7 +36,7 @@ const DropZone = ({ onFileSelect }: DropZoneProps) => {
       e.stopPropagation();
       setIsDragging(false);
       const file = e.dataTransfer.files?.[0];
-      if (file && file.type.startsWith("image/")) onFileSelect(file);
+      if (file && isValidFile(file)) onFileSelect(file);
     },
     [onFileSelect]
   );
@@ -39,7 +44,7 @@ const DropZone = ({ onFileSelect }: DropZoneProps) => {
   const handleClick = () => {
     const input = document.createElement("input");
     input.type = "file";
-    input.accept = "image/*";
+    input.accept = ACCEPT;
     input.onchange = (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (file) onFileSelect(file);
@@ -78,10 +83,10 @@ const DropZone = ({ onFileSelect }: DropZoneProps) => {
       </div>
       <div>
         <p className="text-lg font-medium text-foreground">
-          {isDragging ? "Drop je beeld hier" : "Sleep je beeld hierheen"}
+          {isDragging ? "Drop je bestand hier" : "Sleep je foto of video hierheen"}
         </p>
         <p className="mt-1 text-sm text-muted-foreground">
-          of klik om te uploaden • PNG, JPG, WEBP
+          of klik om te uploaden • PNG, JPG, WEBP, MP4, MOV
         </p>
       </div>
     </div>
