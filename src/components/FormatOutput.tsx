@@ -20,6 +20,7 @@ interface FormatOutputProps {
 const FormatOutput = ({ mediaSrc, mediaType, format, originalName }: FormatOutputProps) => {
   const [offsetX, setOffsetX] = useState(0.5);
   const [offsetY, setOffsetY] = useState(0.5);
+  const [zoom, setZoom] = useState(1);
   const [exporting, setExporting] = useState(false);
 
   const baseName = originalName.replace(/\.[^.]+$/, "");
@@ -37,7 +38,7 @@ const FormatOutput = ({ mediaSrc, mediaType, format, originalName }: FormatOutpu
           img.onerror = () => reject();
           img.src = mediaSrc;
         });
-        blob = await renderImageToCanvas(img, format, offsetX, offsetY);
+        blob = await renderImageToCanvas(img, format, offsetX, offsetY, zoom);
       } else {
         const video = document.createElement("video");
         video.src = mediaSrc;
@@ -47,7 +48,7 @@ const FormatOutput = ({ mediaSrc, mediaType, format, originalName }: FormatOutpu
           video.onerror = () => reject();
           video.load();
         });
-        blob = await renderVideoToBlob(video, format, offsetX, offsetY);
+        blob = await renderVideoToBlob(video, format, offsetX, offsetY, zoom);
       }
       downloadBlob(blob, `${baseName}_${format.ratio.replace(":", "x")}.${ext}`);
     } catch (e) {
@@ -81,10 +82,12 @@ const FormatOutput = ({ mediaSrc, mediaType, format, originalName }: FormatOutpu
         format={format}
         offsetX={offsetX}
         offsetY={offsetY}
+        zoom={zoom}
         onOffsetChange={(x, y) => {
           setOffsetX(x);
           setOffsetY(y);
         }}
+        onZoomChange={setZoom}
       />
     </div>
   );
