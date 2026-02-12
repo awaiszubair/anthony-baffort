@@ -200,7 +200,12 @@ const CropEditor = ({
           step={0.05}
           value={[zoom]}
           onValueChange={([v]) => onZoomChange(v)}
-          className="flex-1"
+          className="flex-1 [&_[role=slider]]:focus-visible:ring-0"
+          tabIndex={-1}
+          onFocus={(e) => {
+            e.preventDefault();
+            containerRef.current?.focus();
+          }}
         />
         <ZoomIn className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
       </div>
