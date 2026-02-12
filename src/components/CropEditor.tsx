@@ -50,9 +50,10 @@ const CropEditor = ({
   const handlePointerDown = useCallback(
     (e: React.PointerEvent) => {
       e.preventDefault();
+      e.stopPropagation();
       setDragging(true);
       dragStart.current = { x: e.clientX, y: e.clientY, ox: offsetX, oy: offsetY };
-      (e.target as HTMLElement).setPointerCapture(e.pointerId);
+      containerRef.current?.setPointerCapture(e.pointerId);
     },
     [offsetX, offsetY]
   );
@@ -129,9 +130,9 @@ const CropEditor = ({
       )}
 
       {/* Drag hint overlay */}
-      <div className="absolute inset-0 flex items-end justify-center pb-2 opacity-0 transition-opacity hover:opacity-100">
+      <div className="pointer-events-none absolute inset-0 flex items-end justify-center pb-2 opacity-60">
         <span className="rounded-full bg-background/80 px-3 py-1 text-xs font-medium text-foreground backdrop-blur-sm">
-          Sleep om te herpositioneren
+          ↕ Sleep om te herpositioneren
         </span>
       </div>
     </div>
