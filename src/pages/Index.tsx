@@ -60,16 +60,31 @@ const Index = () => {
             </div>
           </div>
         ) : (
-          <div className="grid gap-8 lg:grid-cols-3">
-            {FORMATS.map((format) => (
-              <FormatOutput
-                key={format.id}
-                mediaSrc={mediaSrc}
-                mediaType={mediaType}
-                format={format}
-                originalName={file.name}
-              />
-            ))}
+          <div className="space-y-10">
+            {/* Original preview */}
+            <div className="mx-auto max-w-2xl">
+              <p className="mb-3 text-sm font-medium text-muted-foreground">Origineel — {file.name}</p>
+              <div className="overflow-hidden rounded-xl border border-border bg-card">
+                {mediaType === "image" ? (
+                  <img src={mediaSrc} alt="Origineel" className="max-h-80 w-full object-contain" />
+                ) : (
+                  <video src={mediaSrc} muted loop autoPlay playsInline className="max-h-80 w-full object-contain" />
+                )}
+              </div>
+            </div>
+
+            {/* Resized formats */}
+            <div className="grid gap-8 lg:grid-cols-3">
+              {FORMATS.map((format) => (
+                <FormatOutput
+                  key={format.id}
+                  mediaSrc={mediaSrc}
+                  mediaType={mediaType}
+                  format={format}
+                  originalName={file.name}
+                />
+              ))}
+            </div>
           </div>
         )}
       </main>
