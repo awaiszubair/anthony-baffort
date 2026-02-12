@@ -87,6 +87,24 @@ const CropEditor = ({
     setDragging(false);
   }, []);
 
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      const step = e.shiftKey ? 0.05 : 0.01;
+      let newX = offsetX;
+      let newY = offsetY;
+      switch (e.key) {
+        case "ArrowLeft":  newX = Math.max(0, offsetX - step); break;
+        case "ArrowRight": newX = Math.min(1, offsetX + step); break;
+        case "ArrowUp":    newY = Math.max(0, offsetY - step); break;
+        case "ArrowDown":  newY = Math.min(1, offsetY + step); break;
+        default: return;
+      }
+      e.preventDefault();
+      onOffsetChange(newX, newY);
+    },
+    [offsetX, offsetY, onOffsetChange]
+  );
+
   // We use CSS transform to handle zoom + position instead of object-position
   // This gives us more control over scaling
   const getMediaStyle = (): React.CSSProperties => {
@@ -132,7 +150,8 @@ const CropEditor = ({
     <div className="flex flex-col gap-2">
       <div
         ref={containerRef}
-        className={`relative overflow-hidden rounded-lg border-2 transition-colors ${
+        tabIndex={0}
+        className={`relative overflow-hidden rounded-lg border-2 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary ${
           dragging ? "border-primary cursor-grabbing" : "border-border cursor-grab hover:border-primary/40"
         }`}
         style={{ aspectRatio: `${format.width}/${format.height}` }}
@@ -140,6 +159,7 @@ const CropEditor = ({
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
+        onKeyDown={handleKeyDown}
       >
         {mediaType === "image" ? (
           <img
