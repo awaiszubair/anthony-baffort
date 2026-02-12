@@ -1,4 +1,6 @@
-import { useRef, useState, useCallback, useEffect } from "react";
+import { useRef, useState, useCallback } from "react";
+import { ZoomIn, ZoomOut } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
 import type { FormatConfig, MediaType } from "@/lib/mediaUtils";
 
 interface CropEditorProps {
@@ -7,7 +9,9 @@ interface CropEditorProps {
   format: FormatConfig;
   offsetX: number;
   offsetY: number;
+  zoom: number;
   onOffsetChange: (x: number, y: number) => void;
+  onZoomChange: (zoom: number) => void;
 }
 
 const CropEditor = ({
@@ -16,36 +20,33 @@ const CropEditor = ({
   format,
   offsetX,
   offsetY,
+  zoom,
   onOffsetChange,
+  onZoomChange,
 }: CropEditorProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [dragging, setDragging] = useState(false);
   const dragStart = useRef({ x: 0, y: 0, ox: 0, oy: 0 });
   const [mediaDims, setMediaDims] = useState({ w: 0, h: 0 });
 
-  const aspectRatio = format.width / format.height;
-
-  // Calculate how the media scales inside the container (cover mode)
-  const getOverflow = useCallback(() => {
-    if (!containerRef.current || mediaDims.w === 0) return { x: 0, y: 0 };
-    const container = containerRef.current.getBoundingClientRect();
+  // Calculate the drawn size of the media at current zoom (in container pixels)
+  const getDrawSize = useCallback(() => {
+    if (!containerRef.current || mediaDims.w === 0) return { drawW: 0, drawH: 0 };
+    const rect = containerRef.current.getBoundingClientRect();
     const srcRatio = mediaDims.w / mediaDims.h;
-    const dstRatio = container.width / container.height;
+    const dstRatio = rect.width / rect.height;
 
-    let drawW: number, drawH: number;
+    let baseW: number, baseH: number;
     if (srcRatio > dstRatio) {
-      drawH = container.height;
-      drawW = container.height * srcRatio;
+      baseH = rect.height;
+      baseW = rect.height * srcRatio;
     } else {
-      drawW = container.width;
-      drawH = container.width / srcRatio;
+      baseW = rect.width;
+      baseH = rect.width / srcRatio;
     }
 
-    return {
-      x: drawW - container.width,
-      y: drawH - container.height,
-    };
-  }, [mediaDims]);
+    return { drawW: baseW * zoom, drawH: baseH * zoom };
+  }, [mediaDims, zoom]);
 
   const handlePointerDown = useCallback(
     (e: React.PointerEvent) => {
@@ -60,80 +61,128 @@ const CropEditor = ({
 
   const handlePointerMove = useCallback(
     (e: React.PointerEvent) => {
-      if (!dragging) return;
-      const overflow = getOverflow();
-      if (overflow.x === 0 && overflow.y === 0) return;
+      if (!dragging || !containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      const { drawW, drawH } = getDrawSize();
+
+      const overflowX = drawW - rect.width;
+      const overflowY = drawH - rect.height;
 
       const dx = e.clientX - dragStart.current.x;
       const dy = e.clientY - dragStart.current.y;
 
-      const newX =
-        overflow.x > 0
-          ? Math.max(0, Math.min(1, dragStart.current.ox - dx / overflow.x))
-          : 0.5;
-      const newY =
-        overflow.y > 0
-          ? Math.max(0, Math.min(1, dragStart.current.oy - dy / overflow.y))
-          : 0.5;
+      const newX = overflowX > 0
+        ? Math.max(0, Math.min(1, dragStart.current.ox - dx / overflowX))
+        : 0.5;
+      const newY = overflowY > 0
+        ? Math.max(0, Math.min(1, dragStart.current.oy - dy / overflowY))
+        : 0.5;
 
       onOffsetChange(newX, newY);
     },
-    [dragging, getOverflow, onOffsetChange]
+    [dragging, getDrawSize, onOffsetChange]
   );
 
   const handlePointerUp = useCallback(() => {
     setDragging(false);
   }, []);
 
-  // Convert offset to object-position percentage
-  const objectPosition = `${offsetX * 100}% ${offsetY * 100}%`;
+  // We use CSS transform to handle zoom + position instead of object-position
+  // This gives us more control over scaling
+  const getMediaStyle = (): React.CSSProperties => {
+    if (!containerRef.current || mediaDims.w === 0) {
+      return { objectFit: "cover", objectPosition: "center" };
+    }
+
+    const rect = containerRef.current.getBoundingClientRect();
+    const srcRatio = mediaDims.w / mediaDims.h;
+    const dstRatio = rect.width / rect.height;
+
+    // Base cover size
+    let baseW: number, baseH: number;
+    if (srcRatio > dstRatio) {
+      baseH = rect.height;
+      baseW = rect.height * srcRatio;
+    } else {
+      baseW = rect.width;
+      baseH = rect.width / srcRatio;
+    }
+
+    const scaledW = baseW * zoom;
+    const scaledH = baseH * zoom;
+
+    const overflowX = scaledW - rect.width;
+    const overflowY = scaledH - rect.height;
+
+    const tx = overflowX > 0 ? -offsetX * overflowX : (rect.width - scaledW) / 2;
+    const ty = overflowY > 0 ? -offsetY * overflowY : (rect.height - scaledH) / 2;
+
+    return {
+      position: "absolute",
+      left: 0,
+      top: 0,
+      width: `${scaledW}px`,
+      height: `${scaledH}px`,
+      transform: `translate(${tx}px, ${ty}px)`,
+      maxWidth: "none",
+    };
+  };
 
   return (
-    <div
-      ref={containerRef}
-      className={`relative overflow-hidden rounded-lg border-2 transition-colors ${
-        dragging ? "border-primary cursor-grabbing" : "border-border cursor-grab hover:border-primary/40"
-      }`}
-      style={{ aspectRatio: `${format.width}/${format.height}` }}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-      onPointerCancel={handlePointerUp}
-    >
-      {mediaType === "image" ? (
-        <img
-          src={mediaSrc}
-          alt="Preview"
-          draggable={false}
-          className="pointer-events-none h-full w-full select-none object-cover"
-          style={{ objectPosition }}
-          onLoad={(e) => {
-            const img = e.currentTarget;
-            setMediaDims({ w: img.naturalWidth, h: img.naturalHeight });
-          }}
-        />
-      ) : (
-        <video
-          src={mediaSrc}
-          muted
-          loop
-          autoPlay
-          playsInline
-          draggable={false}
-          className="pointer-events-none h-full w-full select-none object-cover"
-          style={{ objectPosition }}
-          onLoadedMetadata={(e) => {
-            const v = e.currentTarget;
-            setMediaDims({ w: v.videoWidth, h: v.videoHeight });
-          }}
-        />
-      )}
+    <div className="flex flex-col gap-2">
+      <div
+        ref={containerRef}
+        className={`relative overflow-hidden rounded-lg border-2 transition-colors ${
+          dragging ? "border-primary cursor-grabbing" : "border-border cursor-grab hover:border-primary/40"
+        }`}
+        style={{ aspectRatio: `${format.width}/${format.height}` }}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+      >
+        {mediaType === "image" ? (
+          <img
+            src={mediaSrc}
+            alt="Preview"
+            draggable={false}
+            className="pointer-events-none select-none"
+            style={getMediaStyle()}
+            onLoad={(e) => {
+              const img = e.currentTarget;
+              setMediaDims({ w: img.naturalWidth, h: img.naturalHeight });
+            }}
+          />
+        ) : (
+          <video
+            src={mediaSrc}
+            muted
+            loop
+            autoPlay
+            playsInline
+            draggable={false}
+            className="pointer-events-none select-none"
+            style={getMediaStyle()}
+            onLoadedMetadata={(e) => {
+              const v = e.currentTarget;
+              setMediaDims({ w: v.videoWidth, h: v.videoHeight });
+            }}
+          />
+        )}
+      </div>
 
-      {/* Drag hint overlay */}
-      <div className="pointer-events-none absolute inset-0 flex items-end justify-center pb-2 opacity-60">
-        <span className="rounded-full bg-background/80 px-3 py-1 text-xs font-medium text-foreground backdrop-blur-sm">
-          ↕ Sleep om te herpositioneren
-        </span>
+      {/* Zoom slider */}
+      <div className="flex items-center gap-2 px-1">
+        <ZoomOut className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+        <Slider
+          min={0.5}
+          max={3}
+          step={0.05}
+          value={[zoom]}
+          onValueChange={([v]) => onZoomChange(v)}
+          className="flex-1"
+        />
+        <ZoomIn className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
       </div>
     </div>
   );

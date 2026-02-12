@@ -27,12 +27,42 @@ export function downloadBlob(blob: Blob, filename: string) {
   URL.revokeObjectURL(url);
 }
 
-/** Render an image onto a canvas with a given crop offset (0-1 range) */
+function computeDrawParams(
+  srcW: number, srcH: number,
+  dstW: number, dstH: number,
+  offsetX: number, offsetY: number,
+  zoom: number
+) {
+  const srcRatio = srcW / srcH;
+  const dstRatio = dstW / dstH;
+
+  let baseW: number, baseH: number;
+  if (srcRatio > dstRatio) {
+    baseH = dstH;
+    baseW = dstH * srcRatio;
+  } else {
+    baseW = dstW;
+    baseH = dstW / srcRatio;
+  }
+
+  const drawW = baseW * zoom;
+  const drawH = baseH * zoom;
+
+  const overflowX = drawW - dstW;
+  const overflowY = drawH - dstH;
+
+  const x = overflowX > 0 ? -offsetX * overflowX : (dstW - drawW) / 2;
+  const y = overflowY > 0 ? -offsetY * overflowY : (dstH - drawH) / 2;
+
+  return { drawW, drawH, x, y };
+}
+
 export function renderImageToCanvas(
   img: HTMLImageElement,
   format: FormatConfig,
   offsetX: number,
-  offsetY: number
+  offsetY: number,
+  zoom: number = 1
 ): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const canvas = document.createElement("canvas");
@@ -43,26 +73,11 @@ export function renderImageToCanvas(
     ctx.fillStyle = "#000000";
     ctx.fillRect(0, 0, format.width, format.height);
 
-    const srcRatio = img.naturalWidth / img.naturalHeight;
-    const dstRatio = format.width / format.height;
-
-    let drawW: number, drawH: number;
-
-    if (srcRatio > dstRatio) {
-      // Source wider than target — height fits, width overflows
-      drawH = format.height;
-      drawW = format.height * srcRatio;
-    } else {
-      // Source taller — width fits, height overflows
-      drawW = format.width;
-      drawH = format.width / srcRatio;
-    }
-
-    const maxOffsetX = drawW - format.width;
-    const maxOffsetY = drawH - format.height;
-
-    const x = -offsetX * maxOffsetX;
-    const y = -offsetY * maxOffsetY;
+    const { drawW, drawH, x, y } = computeDrawParams(
+      img.naturalWidth, img.naturalHeight,
+      format.width, format.height,
+      offsetX, offsetY, zoom
+    );
 
     ctx.drawImage(img, x, y, drawW, drawH);
 
@@ -77,12 +92,12 @@ export function renderImageToCanvas(
   });
 }
 
-/** Record a video with the crop offset applied, returns a webm blob */
 export function renderVideoToBlob(
   video: HTMLVideoElement,
   format: FormatConfig,
   offsetX: number,
-  offsetY: number
+  offsetY: number,
+  zoom: number = 1
 ): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const canvas = document.createElement("canvas");
@@ -105,13 +120,9 @@ export function renderVideoToBlob(
       resolve(new Blob(chunks, { type: "video/webm" }));
     };
 
-    // Clone video to play from start
     const clone = video.cloneNode(true) as HTMLVideoElement;
     clone.currentTime = 0;
     clone.muted = true;
-
-    const srcRatio = video.videoWidth / video.videoHeight;
-    const dstRatio = format.width / format.height;
 
     clone.oncanplay = () => {
       mediaRecorder.start();
@@ -126,19 +137,11 @@ export function renderVideoToBlob(
         ctx.fillStyle = "#000000";
         ctx.fillRect(0, 0, format.width, format.height);
 
-        let drawW: number, drawH: number;
-        if (srcRatio > dstRatio) {
-          drawH = format.height;
-          drawW = format.height * srcRatio;
-        } else {
-          drawW = format.width;
-          drawH = format.width / srcRatio;
-        }
-
-        const maxOffsetX = drawW - format.width;
-        const maxOffsetY = drawH - format.height;
-        const x = -offsetX * maxOffsetX;
-        const y = -offsetY * maxOffsetY;
+        const { drawW, drawH, x, y } = computeDrawParams(
+          video.videoWidth, video.videoHeight,
+          format.width, format.height,
+          offsetX, offsetY, zoom
+        );
 
         ctx.drawImage(clone, x, y, drawW, drawH);
         requestAnimationFrame(draw);
