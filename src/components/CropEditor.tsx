@@ -12,6 +12,7 @@ interface CropEditorProps {
   offsetY: number;
   zoom: number;
   showSafeZones: boolean;
+  fixedHeight?: boolean;
   onOffsetChange: (x: number, y: number) => void;
   onZoomChange: (zoom: number) => void;
 }
@@ -24,6 +25,7 @@ const CropEditor = ({
   offsetY,
   zoom,
   showSafeZones,
+  fixedHeight,
   onOffsetChange,
   onZoomChange,
 }: CropEditorProps) => {
@@ -158,7 +160,7 @@ const CropEditor = ({
         className={`relative overflow-hidden rounded-lg border-2 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary ${
           dragging ? "border-primary cursor-grabbing" : "border-border cursor-grab hover:border-primary/40"
         }`}
-        style={{ aspectRatio: `${format.width}/${format.height}` }}
+        style={fixedHeight ? { height: "450px" } : { aspectRatio: `${format.width}/${format.height}` }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
