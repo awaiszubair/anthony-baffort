@@ -114,15 +114,9 @@ serve(async (req: Request) => {
       },
     ];
 
-    // Filter based on search query
-    const filtered = mockAds.filter(
-      (ad) =>
-        ad.name.toLowerCase().includes(search_query.toLowerCase()) ||
-        ad.text?.toLowerCase().includes(search_query.toLowerCase())
-    );
-
+    // Return all mock ads (in production, the Meta API handles filtering by page)
     const response: MetaAdResponse = {
-      ads: filtered.slice(0, Math.min(limit, filtered.length)),
+      ads: mockAds.slice(0, limit),
     };
 
     return new Response(JSON.stringify(response), {
