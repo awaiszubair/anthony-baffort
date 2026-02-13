@@ -89,11 +89,19 @@ async function compositeLogoOnBlob(
   const logoH = (logoImg.naturalHeight / logoImg.naturalWidth) * logoW;
   const margin = format.width * 0.04;
 
+  const SAFE_BOTTOM: Record<string, number> = { story: 35, portrait: 15, square: 10 };
+
   let lx: number, ly: number;
-  if (logo.position.includes("left")) lx = margin;
-  else lx = format.width - logoW - margin;
-  if (logo.position.includes("top")) ly = margin;
-  else ly = format.height - logoH - margin;
+  if (logo.position === "bottom-center") {
+    lx = (format.width - logoW) / 2;
+    const safeBottomPct = (SAFE_BOTTOM[format.id] ?? 10) + 1;
+    ly = format.height * (1 - safeBottomPct / 100) - logoH;
+  } else {
+    if (logo.position.includes("left")) lx = margin;
+    else lx = format.width - logoW - margin;
+    if (logo.position.includes("top")) ly = margin;
+    else ly = format.height - logoH - margin;
+  }
 
   ctx.globalAlpha = logo.opacity;
   ctx.drawImage(logoImg, lx, ly, logoW, logoH);

@@ -6,6 +6,12 @@ import PlatformOverlay from "@/components/PlatformOverlay";
 import type { FormatConfig, MediaType } from "@/lib/mediaUtils";
 import type { LogoConfig } from "@/components/LogoEditor";
 
+const SAFE_ZONE_BOTTOM: Record<string, number> = {
+  story: 35,
+  portrait: 15,
+  square: 10,
+};
+
 interface CropEditorProps {
   mediaSrc: string;
   mediaType: MediaType;
@@ -220,8 +226,16 @@ const CropEditor = ({
             style={{
               width: `${logo.scale * 100}%`,
               opacity: logo.opacity,
-              ...(logo.position.includes("top") ? { top: "4%" } : { bottom: "4%" }),
-              ...(logo.position.includes("left") ? { left: "4%" } : { right: "4%" }),
+              ...(logo.position === "bottom-center"
+                ? {
+                    bottom: `${(SAFE_ZONE_BOTTOM[format.id] ?? 10) + 1}%`,
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                  }
+                : {
+                    ...(logo.position.includes("top") ? { top: "4%" } : { bottom: "4%" }),
+                    ...(logo.position.includes("left") ? { left: "4%" } : { right: "4%" }),
+                  }),
             }}
           />
         )}
