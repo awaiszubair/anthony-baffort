@@ -117,15 +117,17 @@ const Index = () => {
         ) : (
           <div className="space-y-10">
             {/* Original preview */}
-            <div className="mx-auto max-w-2xl">
+            <div className="flex justify-center">
+            <div className="inline-block">
               <p className="mb-3 text-sm font-medium text-muted-foreground">{t.original} — {file.name}</p>
-              <div className="overflow-hidden rounded-xl border border-border bg-card">
+              <div className="overflow-hidden rounded-xl border border-border bg-card inline-block">
                 {mediaType === "image" ? (
-                  <img src={mediaSrc} alt={t.original} className="max-h-80 w-full object-contain" />
+                  <img src={mediaSrc} alt={t.original} className="max-h-80 block" />
                 ) : (
-                  <video src={mediaSrc} muted loop autoPlay playsInline className="max-h-80 w-full object-contain" />
+                  <video src={mediaSrc} muted loop autoPlay playsInline className="max-h-80 block" />
                 )}
               </div>
+            </div>
             </div>
 
             {/* Action bar */}
