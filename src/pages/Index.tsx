@@ -107,16 +107,11 @@ const Index = () => {
           <div className="mx-auto max-w-xl">
             <p className="mb-6 text-sm text-muted-foreground">{t.uploadIntro}</p>
             <DropZone onFileSelect={handleFile} />
-            <div className="mt-10 grid grid-cols-3 gap-4">
-              {FORMATS.map((f) => (
-                <div
-                  key={f.id}
-                  className="rounded border border-border bg-card px-4 py-3 text-center"
-                >
-                  <p className="text-sm font-medium text-card-foreground tracking-wide">{f.ratio}</p>
-                  <p className="text-[11px] text-muted-foreground tracking-wider uppercase">
-                    {f.width}×{f.height}
-                  </p>
+            <div className="mt-8 flex items-center justify-center gap-6 text-muted-foreground/60">
+              {FORMATS.map((f, i) => (
+                <div key={f.id} className="flex items-center gap-6">
+                  {i > 0 && <span className="text-border">·</span>}
+                  <span className="text-xs tracking-wider uppercase">{f.label} — {f.ratio}</span>
                 </div>
               ))}
             </div>
