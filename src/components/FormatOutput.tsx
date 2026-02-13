@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import CropEditor from "@/components/CropEditor";
+import { useI18n } from "@/lib/i18n";
 import {
   type FormatConfig,
   type MediaType,
@@ -18,11 +19,42 @@ interface FormatOutputProps {
   showSafeZones: boolean;
 }
 
+export async function exportFormat(
+  mediaSrc: string,
+  mediaType: MediaType,
+  format: FormatConfig,
+  offsetX: number,
+  offsetY: number,
+  zoom: number
+): Promise<Blob> {
+  if (mediaType === "image") {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    await new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve();
+      img.onerror = () => reject();
+      img.src = mediaSrc;
+    });
+    return renderImageToCanvas(img, format, offsetX, offsetY, zoom);
+  } else {
+    const video = document.createElement("video");
+    video.src = mediaSrc;
+    video.muted = true;
+    await new Promise<void>((resolve, reject) => {
+      video.oncanplay = () => resolve();
+      video.onerror = () => reject();
+      video.load();
+    });
+    return renderVideoToBlob(video, format, offsetX, offsetY, zoom);
+  }
+}
+
 const FormatOutput = ({ mediaSrc, mediaType, format, originalName, showSafeZones }: FormatOutputProps) => {
   const [offsetX, setOffsetX] = useState(0.5);
   const [offsetY, setOffsetY] = useState(0.5);
   const [zoom, setZoom] = useState(1);
   const [exporting, setExporting] = useState(false);
+  const { t } = useI18n();
 
   const baseName = originalName.replace(/\.[^.]+$/, "");
   const ext = mediaType === "video" ? "mp4" : "jpg";
@@ -30,27 +62,7 @@ const FormatOutput = ({ mediaSrc, mediaType, format, originalName, showSafeZones
   const handleDownload = async () => {
     setExporting(true);
     try {
-      let blob: Blob;
-      if (mediaType === "image") {
-        const img = new Image();
-        img.crossOrigin = "anonymous";
-        await new Promise<void>((resolve, reject) => {
-          img.onload = () => resolve();
-          img.onerror = () => reject();
-          img.src = mediaSrc;
-        });
-        blob = await renderImageToCanvas(img, format, offsetX, offsetY, zoom);
-      } else {
-        const video = document.createElement("video");
-        video.src = mediaSrc;
-        video.muted = true;
-        await new Promise<void>((resolve, reject) => {
-          video.oncanplay = () => resolve();
-          video.onerror = () => reject();
-          video.load();
-        });
-        blob = await renderVideoToBlob(video, format, offsetX, offsetY, zoom);
-      }
+      const blob = await exportFormat(mediaSrc, mediaType, format, offsetX, offsetY, zoom);
       downloadBlob(blob, `${baseName}_${format.ratio.replace(":", "x")}.${ext}`);
     } catch (e) {
       console.error("Export failed:", e);
@@ -74,7 +86,7 @@ const FormatOutput = ({ mediaSrc, mediaType, format, originalName, showSafeZones
           ) : (
             <Download className="h-3.5 w-3.5" />
           )}
-          {exporting ? "Exporteren…" : "Download"}
+          {exporting ? t.exporting : t.download}
         </Button>
       </div>
       <CropEditor

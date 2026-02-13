@@ -1,3 +1,5 @@
+import { useI18n } from "@/lib/i18n";
+
 interface SafeZone {
   top: number;
   bottom: number;
@@ -17,6 +19,7 @@ interface SafeZoneOverlayProps {
 }
 
 const SafeZoneOverlay = ({ formatId, visible }: SafeZoneOverlayProps) => {
+  const { t } = useI18n();
   const zone = SAFE_ZONES[formatId];
   if (!zone || !visible) return null;
 
@@ -28,7 +31,7 @@ const SafeZoneOverlay = ({ formatId, visible }: SafeZoneOverlayProps) => {
           style={{ height: `${zone.top}%` }}
         >
           <span className="rounded bg-black/60 px-1.5 py-0.5 text-[9px] font-medium text-white/70">
-            Safe zone · {zone.top}%
+            {t.safeZoneLabel} · {zone.top}%
           </span>
         </div>
       )}
@@ -39,7 +42,7 @@ const SafeZoneOverlay = ({ formatId, visible }: SafeZoneOverlayProps) => {
           style={{ height: `${zone.bottom}%` }}
         >
           <span className="rounded bg-black/60 px-1.5 py-0.5 text-[9px] font-medium text-white/70">
-            Safe zone · {zone.bottom}%
+            {t.safeZoneLabel} · {zone.bottom}%
           </span>
         </div>
       )}
