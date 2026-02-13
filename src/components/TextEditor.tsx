@@ -159,7 +159,7 @@ const TextEditor = ({ textConfig, onTextChange }: TextEditorProps) => {
         {/* Color */}
         <div>
           <p className="text-xs font-medium text-muted-foreground mb-2">{t.textColor}</p>
-          <div className="flex gap-1.5 flex-wrap">
+          <div className="flex gap-1.5 flex-wrap items-center">
             {COLORS.map((c) => (
               <button
                 key={c}
@@ -171,6 +171,31 @@ const TextEditor = ({ textConfig, onTextChange }: TextEditorProps) => {
                 aria-label={c}
               />
             ))}
+            <label className="relative h-6 w-6 rounded-full border-2 border-border overflow-hidden cursor-pointer" title="Custom color">
+              <input
+                type="color"
+                value={textConfig.color}
+                onChange={(e) => onTextChange({ ...textConfig, color: e.target.value })}
+                className="absolute inset-0 opacity-0 cursor-pointer"
+              />
+              <span className="block h-full w-full bg-gradient-conic from-red-500 via-green-500 to-blue-500 rounded-full" style={{ background: "conic-gradient(red, yellow, lime, cyan, blue, magenta, red)" }} />
+            </label>
+          </div>
+          <div className="flex items-center gap-2 mt-2">
+            <Input
+              value={textConfig.color}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (/^#[0-9A-Fa-f]{0,6}$/.test(v)) onTextChange({ ...textConfig, color: v });
+              }}
+              placeholder="#FF0000"
+              className="text-xs font-mono h-7 w-24"
+              maxLength={7}
+            />
+            <span
+              className="h-5 w-5 rounded border border-border shrink-0"
+              style={{ backgroundColor: textConfig.color }}
+            />
           </div>
         </div>
 
