@@ -88,7 +88,7 @@ const Settings = () => {
             />
             <input
               type="text"
-              placeholder="Meta Page ID (optional)"
+              placeholder="Facebook Handle (e.g. @nike)"
               value={newPageId}
               onChange={(e) => setNewPageId(e.target.value)}
               maxLength={50}
@@ -117,7 +117,7 @@ const Settings = () => {
                   <div>
                     <p className="font-medium text-foreground">{brand.name}</p>
                     {brand.page_id && (
-                      <p className="text-xs text-muted-foreground">Page ID: {brand.page_id}</p>
+                      <p className="text-xs text-muted-foreground">Handle: {brand.page_id}</p>
                     )}
                   </div>
                   <Button
