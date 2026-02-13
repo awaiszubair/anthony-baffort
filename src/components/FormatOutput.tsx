@@ -309,7 +309,7 @@ const FormatOutput = ({ mediaSrc, mediaType, format, originalName, showSafeZones
         format={format}
         offsetX={offsetX}
         offsetY={offsetY}
-        zoom={expandedSrc && mediaType === "image" ? 1 : zoom}
+        zoom={zoom}
         showSafeZones={showSafeZones}
         fixedHeight={fixedHeight}
         expandedBackground={mediaType === "video" ? expandedSrc ?? undefined : undefined}
