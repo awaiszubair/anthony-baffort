@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { RotateCcw } from "lucide-react";
+import { RotateCcw, Shield, ShieldOff } from "lucide-react";
 import DropZone from "@/components/DropZone";
 import FormatOutput from "@/components/FormatOutput";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { FORMATS, detectMediaType, type MediaType } from "@/lib/mediaUtils";
 const Index = () => {
   const [file, setFile] = useState<File | null>(null);
   const [mediaType, setMediaType] = useState<MediaType>("image");
+  const [showSafeZones, setShowSafeZones] = useState(true);
 
   const mediaSrc = useMemo(() => (file ? URL.createObjectURL(file) : ""), [file]);
 
@@ -33,10 +34,25 @@ const Index = () => {
             </p>
           </div>
           {file && (
-            <Button variant="outline" size="sm" onClick={handleReset} className="gap-1.5">
-              <RotateCcw className="h-3.5 w-3.5" />
-              Opnieuw
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowSafeZones((v) => !v)}
+                className="gap-1.5"
+              >
+                {showSafeZones ? (
+                  <ShieldOff className="h-3.5 w-3.5" />
+                ) : (
+                  <Shield className="h-3.5 w-3.5" />
+                )}
+                {showSafeZones ? "Safe zones uit" : "Safe zones aan"}
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleReset} className="gap-1.5">
+                <RotateCcw className="h-3.5 w-3.5" />
+                Opnieuw
+              </Button>
+            </div>
           )}
         </div>
       </header>
@@ -82,6 +98,7 @@ const Index = () => {
                   mediaType={mediaType}
                   format={format}
                   originalName={file.name}
+                  showSafeZones={showSafeZones}
                 />
               ))}
             </div>

@@ -11,6 +11,7 @@ interface CropEditorProps {
   offsetX: number;
   offsetY: number;
   zoom: number;
+  showSafeZones: boolean;
   onOffsetChange: (x: number, y: number) => void;
   onZoomChange: (zoom: number) => void;
 }
@@ -22,6 +23,7 @@ const CropEditor = ({
   offsetX,
   offsetY,
   zoom,
+  showSafeZones,
   onOffsetChange,
   onZoomChange,
 }: CropEditorProps) => {
@@ -163,7 +165,7 @@ const CropEditor = ({
         onPointerCancel={handlePointerUp}
         onKeyDown={handleKeyDown}
       >
-        <SafeZoneOverlay formatId={format.id} />
+        <SafeZoneOverlay formatId={format.id} visible={showSafeZones} />
         {mediaType === "image" ? (
           <img
             src={mediaSrc}

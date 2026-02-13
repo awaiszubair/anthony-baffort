@@ -15,9 +15,10 @@ interface FormatOutputProps {
   mediaType: MediaType;
   format: FormatConfig;
   originalName: string;
+  showSafeZones: boolean;
 }
 
-const FormatOutput = ({ mediaSrc, mediaType, format, originalName }: FormatOutputProps) => {
+const FormatOutput = ({ mediaSrc, mediaType, format, originalName, showSafeZones }: FormatOutputProps) => {
   const [offsetX, setOffsetX] = useState(0.5);
   const [offsetY, setOffsetY] = useState(0.5);
   const [zoom, setZoom] = useState(1);
@@ -83,6 +84,7 @@ const FormatOutput = ({ mediaSrc, mediaType, format, originalName }: FormatOutpu
         offsetX={offsetX}
         offsetY={offsetY}
         zoom={zoom}
+        showSafeZones={showSafeZones}
         onOffsetChange={(x, y) => {
           setOffsetX(x);
           setOffsetY(y);
