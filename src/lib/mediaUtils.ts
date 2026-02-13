@@ -106,8 +106,11 @@ export function renderVideoToBlob(
     const ctx = canvas.getContext("2d")!;
 
     const stream = canvas.captureStream(30);
+    const mimeType = "video/mp4;codecs=h264" in navigator.mediaCapabilities
+      ? "video/mp4;codecs=h264"
+      : "video/webm;codecs=vp9";
     const mediaRecorder = new MediaRecorder(stream, {
-      mimeType: "video/webm;codecs=vp9",
+      mimeType,
       videoBitsPerSecond: 8_000_000,
     });
 

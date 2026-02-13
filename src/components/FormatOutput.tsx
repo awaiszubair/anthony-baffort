@@ -24,7 +24,7 @@ const FormatOutput = ({ mediaSrc, mediaType, format, originalName }: FormatOutpu
   const [exporting, setExporting] = useState(false);
 
   const baseName = originalName.replace(/\.[^.]+$/, "");
-  const ext = mediaType === "video" ? "webm" : "png";
+  const ext = mediaType === "video" ? "mp4" : "png";
 
   const handleDownload = async () => {
     setExporting(true);
