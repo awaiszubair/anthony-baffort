@@ -62,32 +62,32 @@ const DropZone = ({ onFileSelect }: DropZoneProps) => {
       onDragLeave={handleDragOut}
       onDrop={handleDrop}
       className={`
-        relative cursor-pointer rounded-xl border-2 border-dashed p-12
+        relative cursor-pointer rounded border-2 border-dashed p-14
         transition-all duration-300 ease-out
-        flex flex-col items-center justify-center gap-4 text-center
+        flex flex-col items-center justify-center gap-5 text-center
         ${
           isDragging
-            ? "border-primary bg-primary/5 scale-[1.02] animate-pulse-glow"
-            : "border-border hover:border-primary/50 hover:bg-secondary/50"
+            ? "border-foreground bg-accent scale-[1.01]"
+            : "border-border hover:border-foreground/30 hover:bg-accent/50"
         }
       `}
     >
       <div
         className={`rounded-full p-4 transition-colors ${
-          isDragging ? "bg-primary/20" : "bg-secondary"
+          isDragging ? "bg-foreground/10" : "bg-secondary"
         }`}
       >
         {isDragging ? (
-          <ImageIcon className="h-8 w-8 text-primary" />
+          <ImageIcon className="h-7 w-7 text-foreground" />
         ) : (
-          <Upload className="h-8 w-8 text-muted-foreground" />
+          <Upload className="h-7 w-7 text-muted-foreground" />
         )}
       </div>
       <div>
-        <p className="text-lg font-medium text-foreground">
+        <p className="text-base font-medium text-foreground tracking-wide">
           {isDragging ? t.dropTitleDragging : t.dropTitle}
         </p>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1.5 text-xs text-muted-foreground tracking-wider uppercase">
           {t.dropSubtitle}
         </p>
       </div>

@@ -75,8 +75,8 @@ const FormatOutput = ({ mediaSrc, mediaType, format, originalName, showSafeZones
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <div>
-          <p className="font-semibold text-card-foreground">{format.label}</p>
-          <p className="text-xs text-muted-foreground">
+          <p className="font-medium text-card-foreground tracking-wide">{format.label}</p>
+          <p className="text-[11px] text-muted-foreground uppercase tracking-wider">
             {format.ratio} — {format.width}×{format.height}
           </p>
         </div>
