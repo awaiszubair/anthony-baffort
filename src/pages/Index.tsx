@@ -182,7 +182,7 @@ const Index = () => {
             </div>
 
             {/* Resized formats */}
-            <div className="grid gap-8 lg:grid-cols-3 items-start">
+            <div className="flex flex-wrap lg:flex-nowrap gap-8 items-start justify-center">
               {FORMATS.map((format) => (
                 <FormatOutput
                   key={format.id}
