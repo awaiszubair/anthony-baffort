@@ -7,8 +7,8 @@ export interface FormatConfig {
 }
 
 export const FORMATS: FormatConfig[] = [
-  { id: "square", label: "Feed Post", width: 1080, height: 1080, ratio: "1:1" },
-  { id: "portrait", label: "Portrait Post", width: 1440, height: 1800, ratio: "4:5" },
+  { id: "square", label: "Feed", width: 1080, height: 1080, ratio: "1:1" },
+  { id: "portrait", label: "Portrait", width: 1440, height: 1800, ratio: "4:5" },
   { id: "story", label: "Story / Reel", width: 1080, height: 1920, ratio: "9:16" },
 ];
 
