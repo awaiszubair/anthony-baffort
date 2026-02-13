@@ -5,7 +5,7 @@ export type Locale = "nl" | "fr" | "en";
 const translations = {
   nl: {
     title: "Image & Video Resizer",
-    subtitle: "Upload één bestand, pas de positie aan per formaat",
+    subtitle: "Ad Creative Resizer",
     dropTitle: "Sleep je foto of video hierheen",
     dropTitleDragging: "Drop je bestand hier",
     dropSubtitle: "of klik om te uploaden • PNG, JPG, WEBP, MP4, MOV",
@@ -25,7 +25,7 @@ const translations = {
   },
   fr: {
     title: "Image & Video Resizer",
-    subtitle: "Téléchargez un fichier, ajustez la position par format",
+    subtitle: "Ad Creative Resizer",
     dropTitle: "Glissez votre photo ou vidéo ici",
     dropTitleDragging: "Déposez votre fichier ici",
     dropSubtitle: "ou cliquez pour télécharger • PNG, JPG, WEBP, MP4, MOV",
@@ -45,7 +45,7 @@ const translations = {
   },
   en: {
     title: "Image & Video Resizer",
-    subtitle: "Upload one file, adjust position per format",
+    subtitle: "Ad Creative Resizer",
     dropTitle: "Drag your photo or video here",
     dropTitleDragging: "Drop your file here",
     dropSubtitle: "or click to upload • PNG, JPG, WEBP, MP4, MOV",
