@@ -2,6 +2,7 @@ import { useRef, useState, useCallback } from "react";
 import { ZoomIn, ZoomOut } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import SafeZoneOverlay from "@/components/SafeZoneOverlay";
+import PlatformOverlay from "@/components/PlatformOverlay";
 import type { FormatConfig, MediaType } from "@/lib/mediaUtils";
 
 interface CropEditorProps {
@@ -167,6 +168,7 @@ const CropEditor = ({
         onPointerCancel={handlePointerUp}
         onKeyDown={handleKeyDown}
       >
+        <PlatformOverlay formatId={format.id} visible={showSafeZones} />
         <SafeZoneOverlay formatId={format.id} visible={showSafeZones} />
         {mediaType === "image" ? (
           <img
