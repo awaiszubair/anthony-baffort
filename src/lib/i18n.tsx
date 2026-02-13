@@ -47,6 +47,8 @@ const translations = {
     textColor: "Kleur",
     textOpacity: "Transparantie",
     removeText: "Tekst verwijderen",
+    translateTo: "Vertaal naar",
+    translateError: "Vertaling mislukt",
   },
   fr: {
     title: "Image & Video Resizer",
@@ -92,6 +94,8 @@ const translations = {
     textColor: "Couleur",
     textOpacity: "Opacité",
     removeText: "Supprimer le texte",
+    translateTo: "Traduire en",
+    translateError: "La traduction a échoué",
   },
   en: {
     title: "Image & Video Resizer",
@@ -137,6 +141,8 @@ const translations = {
     textColor: "Color",
     textOpacity: "Opacity",
     removeText: "Remove text",
+    translateTo: "Translate to",
+    translateError: "Translation failed",
   },
 } as const;
 

@@ -1,11 +1,13 @@
 import { useState, useCallback } from "react";
-import { Type, Trash2 } from "lucide-react";
+import { Type, Trash2, Languages, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useI18n } from "@/lib/i18n";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export type TextPosition = "top-left" | "top-center" | "top-right" | "center" | "bottom-left" | "bottom-center" | "bottom-right";
 
@@ -13,7 +15,7 @@ export interface TextConfig {
   text: string;
   font: string;
   position: TextPosition;
-  size: number; // percentage of width, e.g. 0.05 = 5%
+  size: number;
   color: string;
   opacity: number;
 }
@@ -50,6 +52,14 @@ const COLORS = [
   "#FFA500",
 ];
 
+const TRANSLATE_LANGS = [
+  { code: "nl", label: "NL" },
+  { code: "fr", label: "FR" },
+  { code: "en", label: "EN" },
+  { code: "de", label: "DE" },
+  { code: "it", label: "IT" },
+];
+
 interface TextEditorProps {
   textConfig: TextConfig | null;
   onTextChange: (config: TextConfig | null) => void;
@@ -57,6 +67,7 @@ interface TextEditorProps {
 
 const TextEditor = ({ textConfig, onTextChange }: TextEditorProps) => {
   const { t } = useI18n();
+  const [translating, setTranslating] = useState<string | null>(null);
 
   const handleAdd = useCallback(() => {
     onTextChange({
@@ -72,6 +83,27 @@ const TextEditor = ({ textConfig, onTextChange }: TextEditorProps) => {
   const handleRemove = useCallback(() => {
     onTextChange(null);
   }, [onTextChange]);
+
+  const handleTranslate = useCallback(async (langCode: string) => {
+    if (!textConfig?.text.trim()) return;
+    setTranslating(langCode);
+    try {
+      const { data, error } = await supabase.functions.invoke("translate-text", {
+        body: { text: textConfig.text, targetLanguage: langCode },
+      });
+      if (error) throw error;
+      if (data?.translatedText) {
+        onTextChange({ ...textConfig, text: data.translatedText });
+      } else if (data?.error) {
+        throw new Error(data.error);
+      }
+    } catch (e) {
+      console.error("Translation failed:", e);
+      toast.error(t.translateError);
+    } finally {
+      setTranslating(null);
+    }
+  }, [textConfig, onTextChange, t]);
 
   if (!textConfig) {
     return (
@@ -101,6 +133,36 @@ const TextEditor = ({ textConfig, onTextChange }: TextEditorProps) => {
             className="text-sm"
           />
         </div>
+
+        {/* Translate */}
+        {textConfig.text.trim() && (
+          <div>
+            <p className="text-xs font-medium text-muted-foreground mb-2">
+              <Languages className="h-3 w-3 inline mr-1" />
+              {t.translateTo}
+            </p>
+            <div className="flex gap-1.5">
+              {TRANSLATE_LANGS.map((lang) => (
+                <button
+                  key={lang.code}
+                  onClick={() => handleTranslate(lang.code)}
+                  disabled={!!translating}
+                  className={`flex-1 h-7 rounded border text-[11px] font-semibold tracking-wide transition-colors cursor-pointer
+                    ${translating === lang.code
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border hover:border-primary/40 hover:bg-muted text-muted-foreground"
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  {translating === lang.code ? (
+                    <Loader2 className="h-3 w-3 animate-spin mx-auto" />
+                  ) : (
+                    lang.label
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Font */}
         <div>
