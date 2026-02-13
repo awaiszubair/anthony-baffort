@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Loader2, AlertCircle, RefreshCw } from "lucide-react";
+import { Loader2, AlertCircle, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,10 +7,12 @@ import { supabase } from "@/integrations/supabase/client";
 interface MetaAd {
   id: string;
   name: string;
-  image_url?: string;
   text?: string;
+  snapshot_url?: string;
+  page_name?: string;
   platform?: string;
   created_at?: string;
+  stopped_at?: string | null;
 }
 
 interface Brand {
@@ -37,15 +39,20 @@ const InspirationAds = () => {
     loadBrands();
   }, []);
 
-  const fetchAds = async (brandName?: string) => {
+  const fetchAds = async (brand: Brand) => {
     setLoading(true);
     setError(null);
     try {
       const res = await supabase.functions.invoke("meta-ad-library", {
-        body: { search_query: brandName || "design", limit: 20 },
+        body: {
+          search_query: brand.name,
+          page_id: brand.page_id || undefined,
+          limit: 25,
+        },
       });
 
       if (res.error) throw new Error(res.error.message);
+      if (res.data?.error) throw new Error(res.data.error);
       setAds(res.data?.ads || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load ads");
@@ -55,20 +62,16 @@ const InspirationAds = () => {
   };
 
   useEffect(() => {
-    if (brands.length > 0) {
-      const brand = selectedBrand
-        ? brands.find((b) => b.id === selectedBrand)
-        : brands[0];
-      if (brand) {
-        setSelectedBrand(brand.id);
-        fetchAds(brand.name);
-      }
+    if (brands.length > 0 && !selectedBrand) {
+      const first = brands[0];
+      setSelectedBrand(first.id);
+      fetchAds(first);
     }
   }, [brands]);
 
   const handleBrandClick = (brand: Brand) => {
     setSelectedBrand(brand.id);
-    fetchAds(brand.name);
+    fetchAds(brand);
   };
 
   return (
@@ -77,7 +80,7 @@ const InspirationAds = () => {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">Inspiration Ads</h1>
           <p className="text-muted-foreground">
-            Browse ad creatives from the brands you're tracking.
+            Browse ad creatives from the brands you're tracking via Meta Ad Library.
           </p>
         </div>
 
@@ -90,6 +93,7 @@ const InspirationAds = () => {
                 variant={selectedBrand === brand.id ? "default" : "outline"}
                 size="sm"
                 onClick={() => handleBrandClick(brand)}
+                disabled={loading}
               >
                 {brand.name}
               </Button>
@@ -126,26 +130,40 @@ const InspirationAds = () => {
                 key={ad.id}
                 className="rounded-lg border border-border bg-card overflow-hidden hover:shadow-lg transition-shadow"
               >
-                {ad.image_url && (
-                  <div className="aspect-square overflow-hidden bg-muted">
-                    <img
-                      src={ad.image_url}
-                      alt={ad.name}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.currentTarget.style.display = "none";
-                      }}
+                {/* Snapshot iframe preview */}
+                {ad.snapshot_url && (
+                  <div className="aspect-square overflow-hidden bg-muted relative">
+                    <iframe
+                      src={ad.snapshot_url}
+                      className="w-full h-full border-0 pointer-events-none"
+                      title={ad.name}
+                      sandbox="allow-scripts allow-same-origin"
                     />
+                    <a
+                      href={ad.snapshot_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="absolute top-2 right-2 p-1.5 rounded-md bg-card/80 hover:bg-card text-foreground transition-colors"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                    </a>
                   </div>
                 )}
                 <div className="p-4">
-                  <h3 className="font-medium text-foreground mb-2 line-clamp-2">{ad.name}</h3>
+                  <h3 className="font-medium text-foreground mb-1 line-clamp-2">
+                    {ad.page_name || ad.name}
+                  </h3>
                   {ad.text && (
                     <p className="text-sm text-muted-foreground mb-3 line-clamp-3">{ad.text}</p>
                   )}
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     {ad.platform && <span className="capitalize">{ad.platform}</span>}
-                    {ad.created_at && <span>{new Date(ad.created_at).toLocaleDateString()}</span>}
+                    <div className="flex gap-2">
+                      {ad.created_at && <span>{new Date(ad.created_at).toLocaleDateString()}</span>}
+                      {!ad.stopped_at && (
+                        <span className="text-success font-medium">Active</span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
