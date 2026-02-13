@@ -169,7 +169,7 @@ const CropEditor = ({
             src={mediaSrc}
             alt="Preview"
             draggable={false}
-            className="pointer-events-none select-none"
+            className="pointer-events-none select-none z-0"
             style={getMediaStyle()}
             onLoad={(e) => {
               const img = e.currentTarget;
@@ -184,7 +184,7 @@ const CropEditor = ({
             autoPlay
             playsInline
             draggable={false}
-            className="pointer-events-none select-none"
+            className="pointer-events-none select-none z-0"
             style={getMediaStyle()}
             onLoadedMetadata={(e) => {
               const v = e.currentTarget;
