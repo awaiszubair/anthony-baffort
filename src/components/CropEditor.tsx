@@ -180,7 +180,7 @@ const CropEditor = ({
         className={`relative overflow-hidden rounded-lg border-2 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary ${
           dragging ? "border-primary cursor-grabbing" : "border-border cursor-grab hover:border-primary/40"
         }`}
-        style={fixedHeight ? { height: "450px", aspectRatio: `${format.width}/${format.height}` } : { aspectRatio: `${format.width}/${format.height}` }}
+        style={{ containerType: "inline-size" as any, ...(fixedHeight ? { height: "450px", aspectRatio: `${format.width}/${format.height}` } : { aspectRatio: `${format.width}/${format.height}` }) }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
@@ -238,7 +238,7 @@ const CropEditor = ({
               className="absolute pointer-events-none select-none z-10 whitespace-pre-wrap px-[4%]"
               style={{
                 fontFamily: textOverlay.font,
-                fontSize: `${textOverlay.size * 100}%`,
+                fontSize: `${textOverlay.size * 100}cqw`,
                 color: textOverlay.color,
                 opacity: textOverlay.opacity,
                 textShadow: "0 1px 4px rgba(0,0,0,0.5)",
