@@ -24,6 +24,9 @@ const translations = {
     no: "Nee",
     uploadIntro: "Upload je afbeelding of video en wij schalen het automatisch naar de drie belangrijkste advertising formaten voor Meta, Instagram en TikTok. Gebruik de safe zones om te controleren of belangrijke elementen (tekst, logo's, gezichten) niet worden afgesneden door UI-overlays van het platform.",
     uploadTip: "Maak je creative bij voorkeur in 9:16 formaat (of anders 4:5) zodat het makkelijker is om binnen de safe zones te blijven voor alle formaten.",
+    aiExpand: "AI Expand",
+    aiExpanding: "Bezig met uitbreiden…",
+    aiExpandError: "AI-uitbreiding mislukt",
   },
   fr: {
     title: "Image & Video Resizer",
@@ -46,6 +49,9 @@ const translations = {
     no: "Non",
     uploadIntro: "Téléchargez votre image ou vidéo et nous la redimensionnons automatiquement aux trois formats publicitaires clés pour Meta, Instagram et TikTok. Utilisez les safe zones pour vérifier que les éléments importants (texte, logos, visages) ne sont pas coupés par les superpositions de la plateforme.",
     uploadTip: "Créez votre visuel de préférence en 9:16 (ou sinon en 4:5) pour rester plus facilement dans les safe zones sur tous les formats.",
+    aiExpand: "AI Expand",
+    aiExpanding: "Expansion en cours…",
+    aiExpandError: "L'expansion AI a échoué",
   },
   en: {
     title: "Image & Video Resizer",
@@ -68,6 +74,9 @@ const translations = {
     no: "No",
     uploadIntro: "Upload your image or video and we'll automatically resize it to the three key advertising formats for Meta, Instagram and TikTok. Use the safe zones to check that important elements (text, logos, faces) aren't cut off by platform UI overlays.",
     uploadTip: "Ideally create your creative in 9:16 format (or 4:5 if that's not possible) to more easily stay within the safe zones across all formats.",
+    aiExpand: "AI Expand",
+    aiExpanding: "Expanding…",
+    aiExpandError: "AI expansion failed",
   },
 } as const;
 
