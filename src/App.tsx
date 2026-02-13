@@ -9,6 +9,8 @@ import { AppSidebar } from "@/components/app-sidebar";
 import Index from "./pages/Index";
 import InspirationAds from "./pages/InspirationAds";
 import Settings from "./pages/Settings";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfUse from "./pages/TermsOfUse";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +30,8 @@ const App = () => (
                   <Route path="/" element={<Index />} />
                   <Route path="/inspiration" element={<InspirationAds />} />
                   <Route path="/settings" element={<Settings />} />
+                  <Route path="/privacy" element={<PrivacyPolicy />} />
+                  <Route path="/terms" element={<TermsOfUse />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
