@@ -1,6 +1,8 @@
 import { useState, useMemo } from "react";
-import { RotateCcw, Shield, ShieldOff, Download, Loader2 } from "lucide-react";
-import logoLandscape from "@/assets/logo-landscape-black.svg";
+import { RotateCcw, Shield, ShieldOff, Download, Loader2, Moon, Sun } from "lucide-react";
+import logoLandscapeBlack from "@/assets/logo-landscape-black.svg";
+import logoLandscapeWhite from "@/assets/logo-landscape-white.svg";
+import { useDarkMode } from "@/hooks/use-dark-mode";
 import DropZone from "@/components/DropZone";
 import FormatOutput from "@/components/FormatOutput";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -17,6 +19,7 @@ import { useI18n } from "@/lib/i18n";
 import { FORMATS, detectMediaType, downloadBlob, renderImageToCanvas, renderVideoToBlob, type MediaType } from "@/lib/mediaUtils";
 
 const Index = () => {
+  const { isDark, toggle: toggleDark } = useDarkMode();
   const [file, setFile] = useState<File | null>(null);
   const [mediaType, setMediaType] = useState<MediaType>("image");
   const [showSafeZones, setShowSafeZones] = useState(true);
@@ -79,12 +82,15 @@ const Index = () => {
       <header className="border-b border-border bg-card">
         <div className="container mx-auto flex items-center justify-between px-4 py-5">
           <div>
-            <img src={logoLandscape} alt="Landing Partners" className="h-7" />
+            <img src={isDark ? logoLandscapeWhite : logoLandscapeBlack} alt="Landing Partners" className="h-7" />
             <p className="mt-1 text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-light">
               {t.subtitle}
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <button onClick={toggleDark} className="p-1.5 rounded hover:bg-muted transition-colors cursor-pointer" aria-label="Toggle dark mode">
+              {isDark ? <Sun className="h-4 w-4 text-foreground" /> : <Moon className="h-4 w-4 text-foreground" />}
+            </button>
             <LanguageSwitcher />
             {file && (
               <Button variant="outline" size="sm" onClick={handleReset} className="gap-1.5">
