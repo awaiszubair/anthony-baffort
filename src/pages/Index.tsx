@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { RotateCcw, Shield, ShieldOff, Download, Loader2 } from "lucide-react";
+import logoLandscape from "@/assets/logo-landscape-black.svg";
 import DropZone from "@/components/DropZone";
 import FormatOutput from "@/components/FormatOutput";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -78,10 +79,8 @@ const Index = () => {
       <header className="border-b border-border bg-card">
         <div className="container mx-auto flex items-center justify-between px-4 py-5">
           <div>
-            <h1 className="text-lg font-medium tracking-tight text-foreground italic">
-              Landing Partners
-            </h1>
-            <p className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-light">
+            <img src={logoLandscape} alt="Landing Partners" className="h-7" />
+            <p className="mt-1 text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-light">
               {t.subtitle}
             </p>
           </div>
