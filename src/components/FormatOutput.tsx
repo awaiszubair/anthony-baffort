@@ -73,8 +73,8 @@ const FormatOutput = ({ mediaSrc, mediaType, format, originalName, showSafeZones
   const baseName = originalName.replace(/\.[^.]+$/, "");
   const ext = mediaType === "video" ? "mp4" : "jpg";
 
-  // Use expanded image if available, otherwise original
-  const activeSrc = expandedSrc || mediaSrc;
+  // For images: use expanded as the full source. For video: keep original video, expanded is background.
+  const activeSrc = (expandedSrc && mediaType === "image") ? expandedSrc : mediaSrc;
 
   const handleDownload = async () => {
     setExporting(true);
@@ -89,11 +89,42 @@ const FormatOutput = ({ mediaSrc, mediaType, format, originalName, showSafeZones
   };
 
   const handleAiExpand = useCallback(async () => {
-    if (mediaType !== "image") return;
     setExpanding(true);
     try {
-      // Render current view (with black borders from zoom-out) to a canvas
-      const blob = await exportFormat(mediaSrc, mediaType, format, offsetX, offsetY, zoom);
+      // For video: grab current frame from the video element in the DOM
+      let blob: Blob;
+      if (mediaType === "video") {
+        const videoEl = document.querySelector(`video[src="${mediaSrc}"]`) as HTMLVideoElement | null;
+        if (!videoEl) throw new Error("Video element not found");
+        // Render current frame to canvas at format dimensions
+        const canvas = document.createElement("canvas");
+        canvas.width = format.width;
+        canvas.height = format.height;
+        const ctx = canvas.getContext("2d")!;
+        ctx.fillStyle = "#000000";
+        ctx.fillRect(0, 0, format.width, format.height);
+        // Compute draw params same as renderImageToCanvas
+        const srcW = videoEl.videoWidth;
+        const srcH = videoEl.videoHeight;
+        const srcRatio = srcW / srcH;
+        const dstRatio = format.width / format.height;
+        let baseW: number, baseH: number;
+        if (srcRatio > dstRatio) { baseH = format.height; baseW = format.height * srcRatio; }
+        else { baseW = format.width; baseH = format.width / srcRatio; }
+        const drawW = baseW * zoom;
+        const drawH = baseH * zoom;
+        const overflowX = drawW - format.width;
+        const overflowY = drawH - format.height;
+        const x = overflowX > 0 ? -offsetX * overflowX : (format.width - drawW) / 2;
+        const y = overflowY > 0 ? -offsetY * overflowY : (format.height - drawH) / 2;
+        ctx.drawImage(videoEl, x, y, drawW, drawH);
+        blob = await new Promise<Blob>((resolve, reject) => {
+          canvas.toBlob((b) => b ? resolve(b) : reject(new Error("Canvas blob failed")), "image/jpeg", 0.85);
+        });
+      } else {
+        blob = await exportFormat(mediaSrc, mediaType, format, offsetX, offsetY, zoom);
+      }
+
       const base64 = await blobToBase64(blob);
 
       const { data, error } = await supabase.functions.invoke("ai-outpaint", {
@@ -103,10 +134,12 @@ const FormatOutput = ({ mediaSrc, mediaType, format, originalName, showSafeZones
       if (error) throw error;
       if (data?.imageUrl) {
         setExpandedSrc(data.imageUrl);
-        // Reset zoom to 1 since the expanded image now fills the frame
-        setZoom(1);
-        setOffsetX(0.5);
-        setOffsetY(0.5);
+        if (mediaType === "image") {
+          setZoom(1);
+          setOffsetX(0.5);
+          setOffsetY(0.5);
+        }
+        // For video: expandedSrc is used as background behind the video
       } else if (data?.error) {
         throw new Error(data.error);
       }
@@ -124,7 +157,7 @@ const FormatOutput = ({ mediaSrc, mediaType, format, originalName, showSafeZones
     if (expandedSrc) setExpandedSrc(null);
   }, [expandedSrc]);
 
-  const showExpandButton = mediaType === "image" && zoom < 1 && !expandedSrc;
+  const showExpandButton = zoom < 1 && !expandedSrc;
 
   return (
     <div className="flex flex-col gap-3">
@@ -168,9 +201,10 @@ const FormatOutput = ({ mediaSrc, mediaType, format, originalName, showSafeZones
         format={format}
         offsetX={offsetX}
         offsetY={offsetY}
-        zoom={expandedSrc ? 1 : zoom}
+        zoom={expandedSrc && mediaType === "image" ? 1 : zoom}
         showSafeZones={showSafeZones}
         fixedHeight={fixedHeight}
+        expandedBackground={mediaType === "video" ? expandedSrc ?? undefined : undefined}
         onOffsetChange={(x, y) => {
           setOffsetX(x);
           setOffsetY(y);
