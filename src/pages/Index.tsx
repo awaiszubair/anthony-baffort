@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { RotateCcw, Shield, ShieldOff, Download, Loader2, Moon, Sun } from "lucide-react";
 import logoLandscapeBlack from "@/assets/logo-landscape-black.svg";
 import logoLandscapeWhite from "@/assets/logo-landscape-white.svg";
@@ -29,10 +29,28 @@ const Index = () => {
 
   const mediaSrc = useMemo(() => (file ? URL.createObjectURL(file) : ""), [file]);
 
+  const isValidFile = (f: File) =>
+    f.type.startsWith("image/") || f.type.startsWith("video/");
+
   const handleFile = (f: File) => {
     setMediaType(detectMediaType(f));
     setFile(f);
   };
+
+  const handleGlobalDrag = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleGlobalDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const f = e.dataTransfer.files?.[0];
+      if (f && isValidFile(f)) handleFile(f);
+    },
+    []
+  );
 
   const handleReset = () => {
     setFile(null);
@@ -78,7 +96,7 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" onDragOver={handleGlobalDrag} onDrop={handleGlobalDrop}>
       <header className="border-b border-border bg-card">
         <div className="container mx-auto flex items-center justify-between px-4 py-5">
           <div>
