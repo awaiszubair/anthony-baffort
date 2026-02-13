@@ -88,12 +88,15 @@ const Settings = () => {
             />
             <input
               type="text"
-              placeholder="Facebook Handle (e.g. @nike)"
+              placeholder="Facebook Page ID (numeric, e.g. 123456789)"
               value={newPageId}
               onChange={(e) => setNewPageId(e.target.value)}
               maxLength={50}
               className="px-4 py-2 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             />
+            <p className="text-xs text-muted-foreground -mt-1">
+              Find it at <a href="https://findmyfbid.com" target="_blank" rel="noopener noreferrer" className="underline text-primary">findmyfbid.com</a> — paste the Facebook page URL to get the numeric ID.
+            </p>
             <Button onClick={addBrand} disabled={adding || !newName.trim()} className="gap-2 self-start">
               {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
               Add Brand
@@ -117,7 +120,7 @@ const Settings = () => {
                   <div>
                     <p className="font-medium text-foreground">{brand.name}</p>
                     {brand.page_id && (
-                      <p className="text-xs text-muted-foreground">Handle: {brand.page_id}</p>
+                      <p className="text-xs text-muted-foreground">Page ID: {brand.page_id}</p>
                     )}
                   </div>
                   <Button
