@@ -14,6 +14,7 @@ interface CropEditorProps {
   zoom: number;
   showSafeZones: boolean;
   fixedHeight?: boolean;
+  expandedBackground?: string;
   onOffsetChange: (x: number, y: number) => void;
   onZoomChange: (zoom: number) => void;
 }
@@ -27,6 +28,7 @@ const CropEditor = ({
   zoom,
   showSafeZones,
   fixedHeight,
+  expandedBackground,
   onOffsetChange,
   onZoomChange,
 }: CropEditorProps) => {
@@ -170,6 +172,14 @@ const CropEditor = ({
       >
         <PlatformOverlay formatId={format.id} visible={showSafeZones} />
         <SafeZoneOverlay formatId={format.id} visible={showSafeZones} />
+        {expandedBackground && (
+          <img
+            src={expandedBackground}
+            alt=""
+            draggable={false}
+            className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none z-0"
+          />
+        )}
         {mediaType === "image" ? (
           <img
             src={mediaSrc}
