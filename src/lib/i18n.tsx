@@ -21,6 +21,7 @@ const translations = {
     newPhotoDescription: "Wil je nog een foto toevoegen?",
     yes: "Ja",
     no: "Nee",
+    uploadIntro: "Kies je afbeelding of video om te resizen voor social media formaten.",
   },
   fr: {
     title: "Image & Video Resizer",
@@ -40,6 +41,7 @@ const translations = {
     newPhotoDescription: "Voulez-vous ajouter une autre photo?",
     yes: "Oui",
     no: "Non",
+    uploadIntro: "Choisissez votre image ou vidéo à redimensionner pour les formats des réseaux sociaux.",
   },
   en: {
     title: "Image & Video Resizer",
@@ -59,6 +61,7 @@ const translations = {
     newPhotoDescription: "Would you like to add another photo?",
     yes: "Yes",
     no: "No",
+    uploadIntro: "Choose your image or video to resize for social media formats.",
   },
 } as const;
 
