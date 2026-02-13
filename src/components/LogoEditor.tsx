@@ -119,8 +119,8 @@ const LogoEditor = ({ logo, onLogoChange }: LogoEditorProps) => {
             {t.logoSize} — {Math.round(logo.scale * 100)}%
           </p>
           <Slider
-            min={0.05}
-            max={0.4}
+            min={0.03}
+            max={0.8}
             step={0.01}
             value={[logo.scale]}
             onValueChange={([v]) => onLogoChange({ ...logo, scale: v })}

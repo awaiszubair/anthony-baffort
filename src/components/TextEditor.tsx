@@ -211,7 +211,7 @@ const TextEditor = ({ textConfig, onTextChange }: TextEditorProps) => {
           </p>
           <Slider
             min={0.02}
-            max={0.15}
+            max={0.25}
             step={0.005}
             value={[textConfig.size]}
             onValueChange={([v]) => onTextChange({ ...textConfig, size: v })}
