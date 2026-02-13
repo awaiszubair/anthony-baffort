@@ -148,9 +148,9 @@ const TextEditor = ({ textConfig, onTextChange }: TextEditorProps) => {
             {t.textSize} — {Math.round(textConfig.size * 100)}%
           </p>
           <Slider
-            min={0.02}
-            max={0.25}
-            step={0.005}
+            min={0.03}
+            max={0.5}
+            step={0.01}
             value={[textConfig.size]}
             onValueChange={([v]) => onTextChange({ ...textConfig, size: v })}
           />
