@@ -4,6 +4,7 @@ import { Slider } from "@/components/ui/slider";
 import SafeZoneOverlay from "@/components/SafeZoneOverlay";
 import PlatformOverlay from "@/components/PlatformOverlay";
 import type { FormatConfig, MediaType } from "@/lib/mediaUtils";
+import type { LogoConfig } from "@/components/LogoEditor";
 
 interface CropEditorProps {
   mediaSrc: string;
@@ -15,6 +16,7 @@ interface CropEditorProps {
   showSafeZones: boolean;
   fixedHeight?: boolean;
   expandedBackground?: string;
+  logo?: LogoConfig | null;
   onOffsetChange: (x: number, y: number) => void;
   onZoomChange: (zoom: number) => void;
 }
@@ -29,6 +31,7 @@ const CropEditor = ({
   showSafeZones,
   fixedHeight,
   expandedBackground,
+  logo,
   onOffsetChange,
   onZoomChange,
 }: CropEditorProps) => {
@@ -205,6 +208,20 @@ const CropEditor = ({
             onLoadedMetadata={(e) => {
               const v = e.currentTarget;
               setMediaDims({ w: v.videoWidth, h: v.videoHeight });
+            }}
+          />
+        )}
+        {logo && (
+          <img
+            src={logo.src}
+            alt="Logo overlay"
+            draggable={false}
+            className="absolute pointer-events-none select-none z-10"
+            style={{
+              width: `${logo.scale * 100}%`,
+              opacity: logo.opacity,
+              ...(logo.position.includes("top") ? { top: "4%" } : { bottom: "4%" }),
+              ...(logo.position.includes("left") ? { left: "4%" } : { right: "4%" }),
             }}
           />
         )}

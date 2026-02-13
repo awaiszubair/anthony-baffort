@@ -6,6 +6,7 @@ import { useDarkMode } from "@/hooks/use-dark-mode";
 import DropZone from "@/components/DropZone";
 import FormatOutput from "@/components/FormatOutput";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import LogoEditor, { type LogoConfig } from "@/components/LogoEditor";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -26,6 +27,7 @@ const Index = () => {
   const [showSafeZones, setShowSafeZones] = useState(true);
   const [downloadingAll, setDownloadingAll] = useState(false);
   const [showNewPhotoDialog, setShowNewPhotoDialog] = useState(false);
+  const [logo, setLogo] = useState<LogoConfig | null>(null);
   const { t } = useI18n();
 
   const mediaSrc = useMemo(() => (file ? URL.createObjectURL(file) : ""), [file]);
@@ -182,6 +184,7 @@ const Index = () => {
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
+                <LogoEditor logo={logo} onLogoChange={setLogo} />
               </div>
 
               <Button
@@ -210,6 +213,7 @@ const Index = () => {
                   originalName={file.name}
                   showSafeZones={showSafeZones}
                   fixedHeight
+                  logo={logo}
                 />
               ))}
             </div>

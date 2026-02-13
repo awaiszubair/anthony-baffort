@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import CropEditor from "@/components/CropEditor";
 import { useI18n } from "@/lib/i18n";
+import type { LogoConfig } from "@/components/LogoEditor";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
@@ -21,6 +22,7 @@ interface FormatOutputProps {
   originalName: string;
   showSafeZones: boolean;
   fixedHeight?: boolean;
+  logo?: LogoConfig | null;
 }
 
 export async function exportFormat(
@@ -29,7 +31,8 @@ export async function exportFormat(
   format: FormatConfig,
   offsetX: number,
   offsetY: number,
-  zoom: number
+  zoom: number,
+  logo?: LogoConfig | null
 ): Promise<Blob> {
   if (mediaType === "image") {
     const img = new Image();
@@ -39,7 +42,9 @@ export async function exportFormat(
       img.onerror = () => reject();
       img.src = mediaSrc;
     });
-    return renderImageToCanvas(img, format, offsetX, offsetY, zoom);
+    const blob = await renderImageToCanvas(img, format, offsetX, offsetY, zoom);
+    if (logo) return compositeLogoOnBlob(blob, format, logo);
+    return blob;
   } else {
     const video = document.createElement("video");
     video.src = mediaSrc;
@@ -53,6 +58,56 @@ export async function exportFormat(
   }
 }
 
+async function compositeLogoOnBlob(
+  baseBlob: Blob,
+  format: FormatConfig,
+  logo: LogoConfig
+): Promise<Blob> {
+  const baseImg = new Image();
+  baseImg.crossOrigin = "anonymous";
+  await new Promise<void>((resolve, reject) => {
+    baseImg.onload = () => resolve();
+    baseImg.onerror = () => reject();
+    baseImg.src = URL.createObjectURL(baseBlob);
+  });
+
+  const logoImg = new Image();
+  logoImg.crossOrigin = "anonymous";
+  await new Promise<void>((resolve, reject) => {
+    logoImg.onload = () => resolve();
+    logoImg.onerror = () => reject();
+    logoImg.src = logo.src;
+  });
+
+  const canvas = document.createElement("canvas");
+  canvas.width = format.width;
+  canvas.height = format.height;
+  const ctx = canvas.getContext("2d")!;
+  ctx.drawImage(baseImg, 0, 0);
+
+  const logoW = format.width * logo.scale;
+  const logoH = (logoImg.naturalHeight / logoImg.naturalWidth) * logoW;
+  const margin = format.width * 0.04;
+
+  let lx: number, ly: number;
+  if (logo.position.includes("left")) lx = margin;
+  else lx = format.width - logoW - margin;
+  if (logo.position.includes("top")) ly = margin;
+  else ly = format.height - logoH - margin;
+
+  ctx.globalAlpha = logo.opacity;
+  ctx.drawImage(logoImg, lx, ly, logoW, logoH);
+  ctx.globalAlpha = 1;
+
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (b) => (b ? resolve(b) : reject(new Error("Logo composite failed"))),
+      "image/jpeg",
+      0.85
+    );
+  });
+}
+
 function blobToBase64(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -62,7 +117,7 @@ function blobToBase64(blob: Blob): Promise<string> {
   });
 }
 
-const FormatOutput = ({ mediaSrc, mediaType, format, originalName, showSafeZones, fixedHeight }: FormatOutputProps) => {
+const FormatOutput = ({ mediaSrc, mediaType, format, originalName, showSafeZones, fixedHeight, logo }: FormatOutputProps) => {
   const [offsetX, setOffsetX] = useState(0.5);
   const [offsetY, setOffsetY] = useState(0.5);
   const [zoom, setZoom] = useState(1);
@@ -81,7 +136,7 @@ const FormatOutput = ({ mediaSrc, mediaType, format, originalName, showSafeZones
   const handleDownload = async () => {
     setExporting(true);
     try {
-      const blob = await exportFormat(activeSrc, mediaType, format, offsetX, offsetY, expandedSrc ? 1 : zoom);
+      const blob = await exportFormat(activeSrc, mediaType, format, offsetX, offsetY, expandedSrc ? 1 : zoom, logo);
       downloadBlob(blob, `${baseName}_${format.ratio.replace(":", "x")}.${ext}`);
     } catch (e) {
       console.error("Export failed:", e);
@@ -251,6 +306,7 @@ const FormatOutput = ({ mediaSrc, mediaType, format, originalName, showSafeZones
         showSafeZones={showSafeZones}
         fixedHeight={fixedHeight}
         expandedBackground={mediaType === "video" ? expandedSrc ?? undefined : undefined}
+        logo={logo}
         onOffsetChange={(x, y) => {
           setOffsetX(x);
           setOffsetY(y);
