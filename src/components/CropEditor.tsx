@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import { ZoomIn, ZoomOut } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import SafeZoneOverlay from "@/components/SafeZoneOverlay";
@@ -48,6 +48,11 @@ const CropEditor = ({
   const [dragging, setDragging] = useState(false);
   const dragStart = useRef({ x: 0, y: 0, ox: 0, oy: 0 });
   const [mediaDims, setMediaDims] = useState({ w: 0, h: 0 });
+
+  // Reset mediaDims when source changes so onLoad recalculates
+  useEffect(() => {
+    setMediaDims({ w: 0, h: 0 });
+  }, [mediaSrc]);
 
   // Calculate the drawn size of the media at current zoom (in container pixels)
   const getDrawSize = useCallback(() => {
@@ -194,8 +199,10 @@ const CropEditor = ({
         )}
         {mediaType === "image" ? (
           <img
+            key={mediaSrc}
             src={mediaSrc}
             alt="Preview"
+            crossOrigin="anonymous"
             draggable={false}
             className="pointer-events-none select-none z-0"
             style={getMediaStyle()}
