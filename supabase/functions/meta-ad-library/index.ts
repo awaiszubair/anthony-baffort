@@ -53,10 +53,9 @@ serve(async (req: Request) => {
       "languages",
     ].join(","));
 
-    // Use search_terms for keyword search, or search_page_ids for specific page
-    if (page_id) {
+    // Use search_page_ids only if page_id is numeric, otherwise use search_terms
+    if (page_id && /^\d+$/.test(page_id)) {
       params.set("search_page_ids", page_id);
-      // search_terms is required even with search_page_ids — use empty string
       params.set("search_terms", "");
     } else {
       params.set("search_terms", search_query);
@@ -66,7 +65,15 @@ serve(async (req: Request) => {
     console.log("Fetching Meta Ad Library:", url.replace(accessToken, "***"));
 
     const response = await fetch(url);
-    const data = await response.json();
+    const responseText = await response.text();
+    console.log("Meta API response status:", response.status, "body:", responseText.substring(0, 500));
+    
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch {
+      throw new Error(`Meta API returned non-JSON: ${responseText.substring(0, 200)}`);
+    }
 
     if (!response.ok || data.error) {
       const errMsg = data.error?.message || `Meta API error [${response.status}]`;
