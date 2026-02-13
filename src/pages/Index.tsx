@@ -124,7 +124,11 @@ const Index = () => {
       <main className="container mx-auto px-4 py-10">
         {!file ? (
           <div className="mx-auto max-w-xl">
-            <p className="mb-6 text-sm text-muted-foreground">{t.uploadIntro}</p>
+            <p className="mb-3 text-sm text-muted-foreground">{t.uploadIntro}</p>
+            <p className="mb-6 text-xs text-muted-foreground/70 flex items-start gap-1.5">
+              <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+              {t.uploadTip}
+            </p>
             <DropZone onFileSelect={handleFile} />
             <div className="mt-8 flex items-center justify-center gap-6 text-muted-foreground/60">
               {FORMATS.map((f, i) => (
