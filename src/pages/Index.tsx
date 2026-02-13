@@ -182,7 +182,7 @@ const Index = () => {
             </div>
 
             {/* Resized formats */}
-            <div className="grid gap-8 lg:grid-cols-3">
+            <div className="grid gap-8 lg:grid-cols-3 items-start">
               {FORMATS.map((format) => (
                 <FormatOutput
                   key={format.id}
@@ -191,6 +191,7 @@ const Index = () => {
                   format={format}
                   originalName={file.name}
                   showSafeZones={showSafeZones}
+                  fixedHeight
                 />
               ))}
             </div>
