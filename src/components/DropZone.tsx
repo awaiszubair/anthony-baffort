@@ -62,13 +62,14 @@ const DropZone = ({ onFileSelect }: DropZoneProps) => {
       onDragLeave={handleDragOut}
       onDrop={handleDrop}
       className={`
-        relative cursor-pointer rounded border-2 border-dashed p-14
+        relative cursor-pointer rounded-2xl border-2 border-dashed p-16
         transition-all duration-300 ease-out
-        flex flex-col items-center justify-center gap-5 text-center
+        flex flex-col items-center justify-center gap-6 text-center
+        shadow-sm
         ${
           isDragging
-            ? "border-foreground bg-accent scale-[1.01]"
-            : "border-border hover:border-foreground/30 hover:bg-accent/50"
+            ? "border-foreground bg-accent scale-[1.01] shadow-md"
+            : "border-border bg-card hover:border-foreground/30 hover:bg-accent/40 hover:shadow-md"
         }
       `}
     >
