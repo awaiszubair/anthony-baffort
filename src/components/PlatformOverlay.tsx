@@ -28,9 +28,9 @@ const TextBar = ({ w = "60%" }: { w?: string }) => (
 
 // ─── Instagram Feed Post overlay (1:1 & 4:5) ───────────────────────────
 const FeedOverlay = () => (
-  <div className="absolute inset-0 pointer-events-none flex flex-col justify-between" style={{ zIndex: 20 }}>
-    {/* Top bar: avatar + username + more */}
-    <div className="flex items-center gap-2 px-3 pt-2.5 pb-2">
+  <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 20 }}>
+    {/* Top bar: avatar + username + more (above safe zone) */}
+    <div className="absolute top-0 left-0 right-0 flex items-center gap-2 px-3 py-2">
       <Avatar size={24} />
       <TextBar w="30%" />
       <div className="ml-auto">
@@ -38,23 +38,23 @@ const FeedOverlay = () => (
       </div>
     </div>
 
-    {/* Bottom: actions + caption */}
-    <div className="px-3 pb-2.5 space-y-2">
+    {/* Bottom: actions + caption (within bottom 15% safe zone) */}
+    <div className="absolute bottom-0 left-0 right-0 px-3 pb-2 space-y-1.5" style={{ height: "15%" }}>
       {/* Action row */}
-      <div className="flex items-center gap-3">
-        <Heart className="h-[18px] w-[18px] text-white/40" />
-        <MessageCircle className="h-[18px] w-[18px] text-white/40" />
-        <Send className="h-[18px] w-[18px] text-white/40" />
+      <div className="flex items-center gap-2">
+        <Heart className="h-4 w-4 text-white/40" />
+        <MessageCircle className="h-4 w-4 text-white/40" />
+        <Send className="h-4 w-4 text-white/40" />
         <div className="ml-auto">
-          <Bookmark className="h-[18px] w-[18px] text-white/40" />
+          <Bookmark className="h-4 w-4 text-white/40" />
         </div>
       </div>
       {/* Likes + caption placeholder */}
-      <div className="space-y-1">
+      <div className="space-y-0.5">
         <TextBar w="20%" />
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1 text-[10px]">
           <TextBar w="22%" />
-          <TextBar w="50%" />
+          <TextBar w="45%" />
         </div>
       </div>
     </div>
