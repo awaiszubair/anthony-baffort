@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import { RotateCcw, Shield, ShieldOff, Download, Loader2, Moon, Sun } from "lucide-react";
+import { RotateCcw, Shield, ShieldOff, Download, Loader2, Moon, Sun, Info } from "lucide-react";
 import logoLandscapeBlack from "@/assets/logo-landscape-black.svg";
 import logoLandscapeWhite from "@/assets/logo-landscape-white.svg";
 import { useDarkMode } from "@/hooks/use-dark-mode";
@@ -15,6 +15,7 @@ import {
   AlertDialogDescription,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useI18n } from "@/lib/i18n";
 import { FORMATS, detectMediaType, downloadBlob, renderImageToCanvas, renderVideoToBlob, type MediaType } from "@/lib/mediaUtils";
 
@@ -152,19 +153,33 @@ const Index = () => {
 
             {/* Action bar */}
             <div className="flex items-center justify-between">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowSafeZones((v) => !v)}
-                className="gap-1.5"
-              >
-                {showSafeZones ? (
-                  <ShieldOff className="h-3.5 w-3.5" />
-                ) : (
-                  <Shield className="h-3.5 w-3.5" />
-                )}
-                {showSafeZones ? t.safeZonesOff : t.safeZonesOn}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowSafeZones((v) => !v)}
+                  className="gap-1.5"
+                >
+                  {showSafeZones ? (
+                    <ShieldOff className="h-3.5 w-3.5" />
+                  ) : (
+                    <Shield className="h-3.5 w-3.5" />
+                  )}
+                  {showSafeZones ? t.safeZonesOff : t.safeZonesOn}
+                </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button className="p-1 rounded-full hover:bg-muted transition-colors cursor-pointer" aria-label="Safe zone info">
+                        <Info className="h-4 w-4 text-muted-foreground" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="max-w-xs text-xs">
+                      {t.safeZoneTooltip}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
 
               <Button
                 size="sm"
