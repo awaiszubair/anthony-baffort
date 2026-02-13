@@ -224,8 +224,7 @@ const FormatOutput = ({ mediaSrc, mediaType, format, originalName, showSafeZones
 
   const handleZoomChange = useCallback((newZoom: number) => {
     setZoom(newZoom);
-    if (expandedSrc) setExpandedSrc(null);
-  }, [expandedSrc]);
+  }, []);
 
   const showExpandButton = zoom < 1 && !expandedSrc;
 
