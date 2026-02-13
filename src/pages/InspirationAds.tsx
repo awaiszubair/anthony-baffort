@@ -2,55 +2,74 @@ import { useState, useEffect } from "react";
 import { Loader2, AlertCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { supabase } from "@/integrations/supabase/client";
 
 interface MetaAd {
   id: string;
   name: string;
   image_url?: string;
-  preview_url?: string;
   text?: string;
   platform?: string;
   created_at?: string;
 }
 
+interface Brand {
+  id: string;
+  name: string;
+  page_id: string | null;
+}
+
 const InspirationAds = () => {
   const [ads, setAds] = useState<MetaAd[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
 
-  const fetchAds = async () => {
+  useEffect(() => {
+    const loadBrands = async () => {
+      const { data } = await supabase
+        .from("brands")
+        .select("*")
+        .order("name", { ascending: true });
+      setBrands(data || []);
+    };
+    loadBrands();
+  }, []);
+
+  const fetchAds = async (brandName?: string) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch("/api/meta-ad-library", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          search_query: searchQuery || "design",
-          limit: 20,
-        }),
+      const res = await supabase.functions.invoke("meta-ad-library", {
+        body: { search_query: brandName || "design", limit: 20 },
       });
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch ads: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      setAds(data.ads || []);
+      if (res.error) throw new Error(res.error.message);
+      setAds(res.data?.ads || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load ads");
-      console.error("Error fetching ads:", err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchAds();
-  }, []);
+    if (brands.length > 0) {
+      const brand = selectedBrand
+        ? brands.find((b) => b.id === selectedBrand)
+        : brands[0];
+      if (brand) {
+        setSelectedBrand(brand.id);
+        fetchAds(brand.name);
+      }
+    }
+  }, [brands]);
+
+  const handleBrandClick = (brand: Brand) => {
+    setSelectedBrand(brand.id);
+    fetchAds(brand.name);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -58,30 +77,35 @@ const InspirationAds = () => {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">Inspiration Ads</h1>
           <p className="text-muted-foreground">
-            Discover creative ad examples from Meta's Ad Library to inspire your campaigns.
+            Browse ad creatives from the brands you're tracking.
           </p>
         </div>
 
-        {/* Search and Filter */}
-        <div className="mb-8 flex gap-4">
-          <input
-            type="text"
-            placeholder="Search ads (e.g., design, marketing, tech)..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1 px-4 py-2 rounded-lg border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-          />
-          <Button onClick={fetchAds} disabled={loading} className="gap-2">
-            {loading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <RefreshCw className="h-4 w-4" />
-            )}
-            Search
-          </Button>
-        </div>
+        {/* Brand filter chips */}
+        {brands.length > 0 ? (
+          <div className="mb-8 flex flex-wrap gap-2">
+            {brands.map((brand) => (
+              <Button
+                key={brand.id}
+                variant={selectedBrand === brand.id ? "default" : "outline"}
+                size="sm"
+                onClick={() => handleBrandClick(brand)}
+              >
+                {brand.name}
+              </Button>
+            ))}
+          </div>
+        ) : (
+          <div className="mb-8 rounded-lg border border-border bg-card p-6 text-center">
+            <p className="text-muted-foreground mb-3">
+              No brands configured yet. Add brands in Settings to get started.
+            </p>
+            <Button variant="outline" size="sm" asChild>
+              <a href="/settings">Go to Settings</a>
+            </Button>
+          </div>
+        )}
 
-        {/* Error State */}
         {error && (
           <Alert className="mb-8 border-destructive bg-destructive/5">
             <AlertCircle className="h-4 w-4 text-destructive" />
@@ -89,14 +113,12 @@ const InspirationAds = () => {
           </Alert>
         )}
 
-        {/* Loading State */}
         {loading && (
           <div className="flex justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         )}
 
-        {/* Ads Grid */}
         {!loading && ads.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {ads.map((ad) => (
@@ -117,19 +139,13 @@ const InspirationAds = () => {
                   </div>
                 )}
                 <div className="p-4">
-                  <h3 className="font-medium text-foreground mb-2 line-clamp-2">
-                    {ad.name}
-                  </h3>
+                  <h3 className="font-medium text-foreground mb-2 line-clamp-2">{ad.name}</h3>
                   {ad.text && (
-                    <p className="text-sm text-muted-foreground mb-3 line-clamp-3">
-                      {ad.text}
-                    </p>
+                    <p className="text-sm text-muted-foreground mb-3 line-clamp-3">{ad.text}</p>
                   )}
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     {ad.platform && <span className="capitalize">{ad.platform}</span>}
-                    {ad.created_at && (
-                      <span>{new Date(ad.created_at).toLocaleDateString()}</span>
-                    )}
+                    {ad.created_at && <span>{new Date(ad.created_at).toLocaleDateString()}</span>}
                   </div>
                 </div>
               </div>
@@ -137,12 +153,9 @@ const InspirationAds = () => {
           </div>
         )}
 
-        {/* Empty State */}
-        {!loading && ads.length === 0 && !error && (
+        {!loading && ads.length === 0 && !error && brands.length > 0 && (
           <div className="text-center py-12">
-            <p className="text-muted-foreground">
-              No ads found. Try searching for different keywords.
-            </p>
+            <p className="text-muted-foreground">No ads found for this brand.</p>
           </div>
         )}
       </div>
