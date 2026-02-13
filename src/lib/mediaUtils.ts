@@ -86,8 +86,8 @@ export function renderImageToCanvas(
         if (!blob) return reject(new Error("Failed to create blob"));
         resolve(blob);
       },
-      "image/png",
-      1
+      "image/jpeg",
+      0.85
     );
   });
 }
@@ -111,7 +111,7 @@ export function renderVideoToBlob(
       : "video/webm;codecs=vp9";
     const mediaRecorder = new MediaRecorder(stream, {
       mimeType,
-      videoBitsPerSecond: 8_000_000,
+      videoBitsPerSecond: 4_000_000,
     });
 
     const chunks: Blob[] = [];
