@@ -87,7 +87,7 @@ const LogoEditor = ({ logo, onLogoChange }: LogoEditorProps) => {
         <div>
           <p className="text-xs font-medium text-muted-foreground mb-2">{t.logoPosition}</p>
           <div className="grid grid-cols-2 gap-1.5">
-            {POSITIONS.map((pos) => (
+            {POSITIONS.filter(p => p.value !== "bottom-center").map((pos) => (
               <button
                 key={pos.value}
                 onClick={() => onLogoChange({ ...logo, position: pos.value })}
@@ -101,6 +101,16 @@ const LogoEditor = ({ logo, onLogoChange }: LogoEditorProps) => {
               </button>
             ))}
           </div>
+          <button
+            onClick={() => onLogoChange({ ...logo, position: "bottom-center" })}
+            className={`w-full h-8 rounded border text-xs font-medium transition-colors cursor-pointer mt-1.5 ${
+              logo.position === "bottom-center"
+                ? "border-primary bg-primary/10 text-primary"
+                : "border-border hover:border-primary/40 text-muted-foreground"
+            }`}
+          >
+            ↓ Midden onder
+          </button>
         </div>
 
         {/* Scale */}
