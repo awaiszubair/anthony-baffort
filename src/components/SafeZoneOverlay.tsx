@@ -21,35 +21,39 @@ const SafeZoneOverlay = ({ formatId }: SafeZoneOverlayProps) => {
 
   return (
     <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 30 }}>
-      {/* Top safe line */}
       {zone.top > 0 && (
         <div
-          className="absolute left-0 right-0 border-b border-dashed border-white/30"
-          style={{ top: `${zone.top}%` }}
+          className="absolute top-0 left-0 right-0 bg-black/40 border-b border-dashed border-white/40"
+          style={{ height: `${zone.top}%` }}
         />
       )}
 
-      {/* Bottom safe line */}
       {zone.bottom > 0 && (
         <div
-          className="absolute left-0 right-0 border-t border-dashed border-white/30"
-          style={{ bottom: `${zone.bottom}%` }}
+          className="absolute bottom-0 left-0 right-0 bg-black/40 border-t border-dashed border-white/40"
+          style={{ height: `${zone.bottom}%` }}
         />
       )}
 
-      {/* Left safe line */}
       {zone.left > 0 && (
         <div
-          className="absolute top-0 bottom-0 border-r border-dashed border-white/20"
-          style={{ left: `${zone.left}%` }}
+          className="absolute left-0 bg-black/25 border-r border-dashed border-white/30"
+          style={{
+            width: `${zone.left}%`,
+            top: `${zone.top}%`,
+            bottom: `${zone.bottom}%`,
+          }}
         />
       )}
 
-      {/* Right safe line */}
       {zone.right > 0 && (
         <div
-          className="absolute top-0 bottom-0 border-l border-dashed border-white/20"
-          style={{ right: `${zone.right}%` }}
+          className="absolute right-0 bg-black/25 border-l border-dashed border-white/30"
+          style={{
+            width: `${zone.right}%`,
+            top: `${zone.top}%`,
+            bottom: `${zone.bottom}%`,
+          }}
         />
       )}
     </div>
