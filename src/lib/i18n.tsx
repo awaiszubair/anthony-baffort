@@ -22,7 +22,8 @@ const translations = {
     newPhotoDescription: "Wil je nog een foto toevoegen?",
     yes: "Ja",
     no: "Nee",
-    uploadIntro: "Upload je afbeelding of video en wij schalen het automatisch naar de drie belangrijkste advertising formaten voor Meta, Instagram en TikTok. Tip: maak je creative bij voorkeur in 9:16 formaat (of anders in 4:5) zodat het makkelijker past in alle formaten. Gebruik de safe zones om te controleren of belangrijke elementen (tekst, logo's, gezichten) niet worden afgesneden door UI-overlays van het platform.",
+    uploadIntro: "Upload je afbeelding of video en wij schalen het automatisch naar de drie belangrijkste advertising formaten voor Meta, Instagram en TikTok. Gebruik de safe zones om te controleren of belangrijke elementen (tekst, logo's, gezichten) niet worden afgesneden door UI-overlays van het platform.",
+    uploadTip: "Maak je creative bij voorkeur in 9:16 formaat (of anders 4:5) voor de beste fit over alle formaten.",
   },
   fr: {
     title: "Image & Video Resizer",
@@ -43,7 +44,8 @@ const translations = {
     newPhotoDescription: "Voulez-vous ajouter une autre photo?",
     yes: "Oui",
     no: "Non",
-    uploadIntro: "Téléchargez votre image ou vidéo et nous la redimensionnons automatiquement aux trois formats publicitaires clés pour Meta, Instagram et TikTok. Conseil : créez votre visuel de préférence en format 9:16 (ou sinon en 4:5) pour un meilleur ajustement à tous les formats. Utilisez les safe zones pour vérifier que les éléments importants (texte, logos, visages) ne sont pas coupés par les superpositions de la plateforme.",
+    uploadIntro: "Téléchargez votre image ou vidéo et nous la redimensionnons automatiquement aux trois formats publicitaires clés pour Meta, Instagram et TikTok. Utilisez les safe zones pour vérifier que les éléments importants (texte, logos, visages) ne sont pas coupés par les superpositions de la plateforme.",
+    uploadTip: "Créez votre visuel de préférence en 9:16 (ou sinon en 4:5) pour un meilleur ajustement à tous les formats.",
   },
   en: {
     title: "Image & Video Resizer",
@@ -64,7 +66,8 @@ const translations = {
     newPhotoDescription: "Would you like to add another photo?",
     yes: "Yes",
     no: "No",
-    uploadIntro: "Upload your image or video and we'll automatically resize it to the three key advertising formats for Meta, Instagram and TikTok. Tip: ideally create your creative in 9:16 format (or 4:5 if that's not possible) for the best fit across all formats. Use the safe zones to check that important elements (text, logos, faces) aren't cut off by platform UI overlays.",
+    uploadIntro: "Upload your image or video and we'll automatically resize it to the three key advertising formats for Meta, Instagram and TikTok. Use the safe zones to check that important elements (text, logos, faces) aren't cut off by platform UI overlays.",
+    uploadTip: "Ideally create your creative in 9:16 format (or 4:5 if that's not possible) for the best fit across all formats.",
   },
 } as const;
 
