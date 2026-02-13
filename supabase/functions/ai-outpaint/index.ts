@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { imageBase64 } = await req.json();
+    const { imageBase64, customPrompt } = await req.json();
 
     if (!imageBase64) {
       return new Response(JSON.stringify({ error: "imageBase64 is required" }), {
@@ -41,7 +41,9 @@ serve(async (req) => {
             content: [
               {
                 type: "text",
-                text: "This image has empty/transparent/black borders around it where it was zoomed out. Please expand and fill those border areas by seamlessly continuing the existing image content outward. Keep the center of the image exactly as-is — only generate new content for the empty border regions. The result should look like a natural, wider version of the original scene. Return the full expanded image.",
+                text: customPrompt
+                  ? `This image has empty/black borders. Expand and fill those borders by continuing the image outward. Keep the center as-is. Additional instructions from the user: ${customPrompt}. Return the full expanded image.`
+                  : "This image has empty/transparent/black borders around it where it was zoomed out. Please expand and fill those border areas by seamlessly continuing the existing image content outward. Keep the center of the image exactly as-is — only generate new content for the empty border regions. The result should look like a natural, wider version of the original scene. Return the full expanded image.",
               },
               {
                 type: "image_url",
