@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import { RotateCcw, Shield, ShieldOff, Download, Loader2, Moon, Sun, Info } from "lucide-react";
+import { RotateCcw, Shield, ShieldOff, Download, Loader2, Moon, Sun, Info, Languages } from "lucide-react";
 import logoLandscapeBlack from "@/assets/logo-landscape-black.svg";
 import logoLandscapeWhite from "@/assets/logo-landscape-white.svg";
 import { useDarkMode } from "@/hooks/use-dark-mode";
@@ -29,6 +29,7 @@ const Index = () => {
   const [showSafeZones, setShowSafeZones] = useState(true);
   const [downloadingAll, setDownloadingAll] = useState(false);
   const [showNewPhotoDialog, setShowNewPhotoDialog] = useState(false);
+  const [showTranslateBar, setShowTranslateBar] = useState(false);
   const [logo, setLogo] = useState<LogoConfig | null>(null);
   const [textOverlay, setTextOverlay] = useState<TextConfig | null>(null);
   const { t } = useI18n();
@@ -192,24 +193,37 @@ const Index = () => {
                   <TextEditor textConfig={textOverlay} onTextChange={setTextOverlay} />
                 </div>
 
-                <Button
-                  size="sm"
-                  onClick={handleDownloadAll}
-                  disabled={downloadingAll}
-                  className="gap-1.5"
-                >
-                  {downloadingAll ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <Download className="h-3.5 w-3.5" />
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    onClick={handleDownloadAll}
+                    disabled={downloadingAll}
+                    className="gap-1.5"
+                  >
+                    {downloadingAll ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Download className="h-3.5 w-3.5" />
+                    )}
+                    {downloadingAll ? t.exporting : t.downloadAll}
+                  </Button>
+                  {textOverlay?.text?.trim() && (
+                    <Button
+                      variant={showTranslateBar ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setShowTranslateBar((v) => !v)}
+                      className="gap-1.5"
+                    >
+                      <Languages className="h-3.5 w-3.5" />
+                      {t.translateButton}
+                    </Button>
                   )}
-                  {downloadingAll ? t.exporting : t.downloadAll}
-                </Button>
+                </div>
               </div>
             </div>
 
             {/* Translate bar */}
-            {textOverlay?.text?.trim() && (
+            {showTranslateBar && textOverlay?.text?.trim() && (
               <div className="flex justify-center">
                 <TranslateBar
                   textConfig={textOverlay}
@@ -243,6 +257,19 @@ const Index = () => {
           <AlertDialogTitle>{t.newPhotoTitle}</AlertDialogTitle>
           <AlertDialogDescription>{t.newPhotoDescription}</AlertDialogDescription>
           <div className="flex gap-3 justify-end">
+            {textOverlay?.text?.trim() && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowNewPhotoDialog(false);
+                  setShowTranslateBar(true);
+                }}
+                className="gap-1.5"
+              >
+                <Languages className="h-3.5 w-3.5" />
+                {t.otherLanguage}
+              </Button>
+            )}
             <AlertDialogCancel>{t.no}</AlertDialogCancel>
             <AlertDialogAction onClick={() => {
               handleReset();
