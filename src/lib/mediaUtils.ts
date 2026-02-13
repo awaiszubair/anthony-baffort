@@ -122,9 +122,26 @@ export function renderVideoToBlob(
 
     const clone = video.cloneNode(true) as HTMLVideoElement;
     clone.currentTime = 0;
-    clone.muted = true;
+    clone.muted = false;
 
     clone.oncanplay = () => {
+      // Capture audio from the video element and combine with canvas stream
+      try {
+        const audioCtx = new AudioContext();
+        const source = audioCtx.createMediaElementSource(clone);
+        const dest = audioCtx.createMediaStreamDestination();
+        source.connect(dest);
+        source.connect(audioCtx.destination); // keep audible during recording? no — we just need the track
+        source.disconnect(audioCtx.destination);
+
+        // Merge canvas video track + audio track
+        for (const track of dest.stream.getAudioTracks()) {
+          stream.addTrack(track);
+        }
+      } catch {
+        // No audio track or AudioContext not supported — continue without audio
+      }
+
       mediaRecorder.start();
       clone.play();
 
