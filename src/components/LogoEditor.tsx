@@ -5,9 +5,11 @@ import { Slider } from "@/components/ui/slider";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useI18n } from "@/lib/i18n";
 
+export type LogoPosition = "top-left" | "top-right" | "bottom-left" | "bottom-right" | "bottom-center";
+
 export interface LogoConfig {
   src: string;
-  position: "top-left" | "top-right" | "bottom-left" | "bottom-right";
+  position: LogoPosition;
   scale: number;
   opacity: number;
 }
@@ -16,6 +18,7 @@ const POSITIONS = [
   { value: "top-left" as const, label: "↖" },
   { value: "top-right" as const, label: "↗" },
   { value: "bottom-left" as const, label: "↙" },
+  { value: "bottom-center" as const, label: "↓" },
   { value: "bottom-right" as const, label: "↘" },
 ];
 
