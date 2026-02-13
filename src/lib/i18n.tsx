@@ -49,6 +49,8 @@ const translations = {
     removeText: "Tekst verwijderen",
     translateTo: "Vertaal naar",
     translateError: "Vertaling mislukt",
+    translateButton: "Vertalen",
+    otherLanguage: "Andere taal",
   },
   fr: {
     title: "Image & Video Resizer",
@@ -96,6 +98,8 @@ const translations = {
     removeText: "Supprimer le texte",
     translateTo: "Traduire en",
     translateError: "La traduction a échoué",
+    translateButton: "Traduire",
+    otherLanguage: "Autre langue",
   },
   en: {
     title: "Image & Video Resizer",
@@ -143,6 +147,8 @@ const translations = {
     removeText: "Remove text",
     translateTo: "Translate to",
     translateError: "Translation failed",
+    translateButton: "Translate",
+    otherLanguage: "Other language",
   },
 } as const;
 
