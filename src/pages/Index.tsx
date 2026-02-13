@@ -159,50 +159,52 @@ const Index = () => {
             </div>
 
             {/* Action bar */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
+            <div className="flex flex-wrap lg:flex-nowrap gap-8 items-start justify-center">
+              <div className="w-full flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowSafeZones((v) => !v)}
+                    className="gap-1.5"
+                  >
+                    {showSafeZones ? (
+                      <ShieldOff className="h-3.5 w-3.5" />
+                    ) : (
+                      <Shield className="h-3.5 w-3.5" />
+                    )}
+                    {showSafeZones ? t.safeZonesOff : t.safeZonesOn}
+                  </Button>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button className="p-1 rounded-full hover:bg-muted transition-colors cursor-pointer" aria-label="Safe zone info">
+                          <Info className="h-4 w-4 text-muted-foreground" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" className="max-w-xs text-xs">
+                        {t.safeZoneTooltip}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <LogoEditor logo={logo} onLogoChange={setLogo} />
+                  <TextEditor textConfig={textOverlay} onTextChange={setTextOverlay} />
+                </div>
+
                 <Button
-                  variant="outline"
                   size="sm"
-                  onClick={() => setShowSafeZones((v) => !v)}
+                  onClick={handleDownloadAll}
+                  disabled={downloadingAll}
                   className="gap-1.5"
                 >
-                  {showSafeZones ? (
-                    <ShieldOff className="h-3.5 w-3.5" />
+                  {downloadingAll ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   ) : (
-                    <Shield className="h-3.5 w-3.5" />
+                    <Download className="h-3.5 w-3.5" />
                   )}
-                  {showSafeZones ? t.safeZonesOff : t.safeZonesOn}
+                  {downloadingAll ? t.exporting : t.downloadAll}
                 </Button>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button className="p-1 rounded-full hover:bg-muted transition-colors cursor-pointer" aria-label="Safe zone info">
-                        <Info className="h-4 w-4 text-muted-foreground" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom" className="max-w-xs text-xs">
-                      {t.safeZoneTooltip}
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                <LogoEditor logo={logo} onLogoChange={setLogo} />
-                <TextEditor textConfig={textOverlay} onTextChange={setTextOverlay} />
               </div>
-
-              <Button
-                size="sm"
-                onClick={handleDownloadAll}
-                disabled={downloadingAll}
-                className="gap-1.5"
-              >
-                {downloadingAll ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <Download className="h-3.5 w-3.5" />
-                )}
-                {downloadingAll ? t.exporting : t.downloadAll}
-              </Button>
             </div>
 
             {/* Resized formats */}
