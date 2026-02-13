@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import { Upload, Image as ImageIcon } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 interface DropZoneProps {
   onFileSelect: (file: File) => void;
@@ -9,6 +10,7 @@ const ACCEPT = "image/*,video/*";
 
 const DropZone = ({ onFileSelect }: DropZoneProps) => {
   const [isDragging, setIsDragging] = useState(false);
+  const { t } = useI18n();
 
   const isValidFile = (file: File) =>
     file.type.startsWith("image/") || file.type.startsWith("video/");
@@ -83,10 +85,10 @@ const DropZone = ({ onFileSelect }: DropZoneProps) => {
       </div>
       <div>
         <p className="text-lg font-medium text-foreground">
-          {isDragging ? "Drop je bestand hier" : "Sleep je foto of video hierheen"}
+          {isDragging ? t.dropTitleDragging : t.dropTitle}
         </p>
         <p className="mt-1 text-sm text-muted-foreground">
-          of klik om te uploaden • PNG, JPG, WEBP, MP4, MOV
+          {t.dropSubtitle}
         </p>
       </div>
     </div>
