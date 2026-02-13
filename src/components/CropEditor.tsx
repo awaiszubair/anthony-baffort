@@ -194,7 +194,9 @@ const CropEditor = ({
 
       {/* Zoom slider */}
       <div className="flex items-center gap-2 px-1">
-        <ZoomOut className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+        <button type="button" onClick={() => onZoomChange(Math.max(0.5, zoom - 0.1))} className="p-0.5 rounded hover:bg-muted transition-colors cursor-pointer" aria-label="Zoom out">
+          <ZoomOut className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+        </button>
         <Slider
           min={0.5}
           max={3}
@@ -208,7 +210,9 @@ const CropEditor = ({
             containerRef.current?.focus();
           }}
         />
-        <ZoomIn className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+        <button type="button" onClick={() => onZoomChange(Math.min(3, zoom + 0.1))} className="p-0.5 rounded hover:bg-muted transition-colors cursor-pointer" aria-label="Zoom in">
+          <ZoomIn className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+        </button>
       </div>
     </div>
   );
