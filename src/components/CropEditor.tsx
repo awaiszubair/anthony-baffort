@@ -55,6 +55,7 @@ const CropEditor = ({
       setDragging(true);
       dragStart.current = { x: e.clientX, y: e.clientY, ox: offsetX, oy: offsetY };
       containerRef.current?.setPointerCapture(e.pointerId);
+      containerRef.current?.focus();
     },
     [offsetX, offsetY]
   );
