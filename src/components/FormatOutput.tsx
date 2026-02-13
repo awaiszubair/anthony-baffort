@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import CropEditor from "@/components/CropEditor";
 import { useI18n } from "@/lib/i18n";
 import type { LogoConfig } from "@/components/LogoEditor";
+import type { TextConfig } from "@/components/TextEditor";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
@@ -23,6 +24,7 @@ interface FormatOutputProps {
   showSafeZones: boolean;
   fixedHeight?: boolean;
   logo?: LogoConfig | null;
+  textOverlay?: TextConfig | null;
 }
 
 export async function exportFormat(
@@ -32,7 +34,8 @@ export async function exportFormat(
   offsetX: number,
   offsetY: number,
   zoom: number,
-  logo?: LogoConfig | null
+  logo?: LogoConfig | null,
+  textOverlay?: TextConfig | null
 ): Promise<Blob> {
   if (mediaType === "image") {
     const img = new Image();
@@ -42,8 +45,9 @@ export async function exportFormat(
       img.onerror = () => reject();
       img.src = mediaSrc;
     });
-    const blob = await renderImageToCanvas(img, format, offsetX, offsetY, zoom);
-    if (logo) return compositeLogoOnBlob(blob, format, logo);
+    let blob = await renderImageToCanvas(img, format, offsetX, offsetY, zoom);
+    if (logo) blob = await compositeLogoOnBlob(blob, format, logo);
+    if (textOverlay?.text) blob = await compositeTextOnBlob(blob, format, textOverlay);
     return blob;
   } else {
     const video = document.createElement("video");
@@ -116,6 +120,92 @@ async function compositeLogoOnBlob(
   });
 }
 
+async function compositeTextOnBlob(
+  baseBlob: Blob,
+  format: FormatConfig,
+  text: TextConfig
+): Promise<Blob> {
+  const baseImg = new Image();
+  baseImg.crossOrigin = "anonymous";
+  await new Promise<void>((resolve, reject) => {
+    baseImg.onload = () => resolve();
+    baseImg.onerror = () => reject();
+    baseImg.src = URL.createObjectURL(baseBlob);
+  });
+
+  const canvas = document.createElement("canvas");
+  canvas.width = format.width;
+  canvas.height = format.height;
+  const ctx = canvas.getContext("2d")!;
+  ctx.drawImage(baseImg, 0, 0);
+
+  const fontSize = format.width * text.size;
+  ctx.font = `bold ${fontSize}px ${text.font}`;
+  ctx.fillStyle = text.color;
+  ctx.globalAlpha = text.opacity;
+  ctx.shadowColor = "rgba(0,0,0,0.5)";
+  ctx.shadowBlur = 4;
+  ctx.shadowOffsetY = 1;
+
+  const margin = format.width * 0.04;
+  const maxWidth = format.width - margin * 2;
+  const lines = wrapText(ctx, text.text, maxWidth);
+  const lineHeight = fontSize * 1.2;
+  const totalHeight = lines.length * lineHeight;
+
+  let startY: number;
+  if (text.position === "center") {
+    startY = (format.height - totalHeight) / 2 + fontSize;
+  } else if (text.position.includes("top")) {
+    startY = margin + fontSize;
+  } else {
+    startY = format.height - margin - totalHeight + fontSize;
+  }
+
+  let textAlign: CanvasTextAlign = "left";
+  let anchorX = margin;
+  if (text.position === "center" || text.position.includes("center")) {
+    textAlign = "center";
+    anchorX = format.width / 2;
+  } else if (text.position.includes("right")) {
+    textAlign = "right";
+    anchorX = format.width - margin;
+  }
+  ctx.textAlign = textAlign;
+
+  for (let i = 0; i < lines.length; i++) {
+    ctx.fillText(lines[i], anchorX, startY + i * lineHeight);
+  }
+
+  ctx.globalAlpha = 1;
+  ctx.shadowColor = "transparent";
+
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (b) => (b ? resolve(b) : reject(new Error("Text composite failed"))),
+      "image/jpeg",
+      0.85
+    );
+  });
+}
+
+function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
+  const words = text.split(" ");
+  const lines: string[] = [];
+  let currentLine = "";
+  for (const word of words) {
+    const testLine = currentLine ? `${currentLine} ${word}` : word;
+    if (ctx.measureText(testLine).width > maxWidth && currentLine) {
+      lines.push(currentLine);
+      currentLine = word;
+    } else {
+      currentLine = testLine;
+    }
+  }
+  if (currentLine) lines.push(currentLine);
+  return lines;
+}
+
 function blobToBase64(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -125,7 +215,7 @@ function blobToBase64(blob: Blob): Promise<string> {
   });
 }
 
-const FormatOutput = ({ mediaSrc, mediaType, format, originalName, showSafeZones, fixedHeight, logo }: FormatOutputProps) => {
+const FormatOutput = ({ mediaSrc, mediaType, format, originalName, showSafeZones, fixedHeight, logo, textOverlay }: FormatOutputProps) => {
   const [offsetX, setOffsetX] = useState(0.5);
   const [offsetY, setOffsetY] = useState(0.5);
   const [zoom, setZoom] = useState(1);
@@ -144,7 +234,7 @@ const FormatOutput = ({ mediaSrc, mediaType, format, originalName, showSafeZones
   const handleDownload = async () => {
     setExporting(true);
     try {
-      const blob = await exportFormat(activeSrc, mediaType, format, offsetX, offsetY, expandedSrc ? 1 : zoom, logo);
+      const blob = await exportFormat(activeSrc, mediaType, format, offsetX, offsetY, expandedSrc ? 1 : zoom, logo, textOverlay);
       downloadBlob(blob, `${baseName}_${format.ratio.replace(":", "x")}.${ext}`);
     } catch (e) {
       console.error("Export failed:", e);
@@ -319,6 +409,7 @@ const FormatOutput = ({ mediaSrc, mediaType, format, originalName, showSafeZones
           setOffsetY(y);
         }}
         onZoomChange={handleZoomChange}
+        textOverlay={textOverlay}
       />
     </div>
   );
