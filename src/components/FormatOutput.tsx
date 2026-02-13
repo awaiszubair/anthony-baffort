@@ -46,8 +46,8 @@ export async function exportFormat(
       img.src = mediaSrc;
     });
     let blob = await renderImageToCanvas(img, format, offsetX, offsetY, zoom);
-    if (logo) blob = await compositeLogoOnBlob(blob, format, logo);
     if (textOverlay?.text) blob = await compositeTextOnBlob(blob, format, textOverlay);
+    if (logo) blob = await compositeLogoOnBlob(blob, format, logo, textOverlay);
     return blob;
   } else {
     const video = document.createElement("video");
@@ -65,7 +65,8 @@ export async function exportFormat(
 async function compositeLogoOnBlob(
   baseBlob: Blob,
   format: FormatConfig,
-  logo: LogoConfig
+  logo: LogoConfig,
+  textOverlay?: TextConfig | null
 ): Promise<Blob> {
   const baseImg = new Image();
   baseImg.crossOrigin = "anonymous";
@@ -94,17 +95,26 @@ async function compositeLogoOnBlob(
   const margin = format.width * 0.04;
 
   const SAFE_BOTTOM: Record<string, number> = { story: 35, portrait: 15, square: 10 };
+  const safeBottomPct = (SAFE_BOTTOM[format.id] ?? 10) + 1;
+
+  // Calculate text push-up if text is at bottom
+  const hasTextAtBottom = textOverlay?.text && (
+    textOverlay.position === "bottom-center" || textOverlay.position === "bottom-left" || textOverlay.position === "bottom-right"
+  );
+  const textHeightPct = hasTextAtBottom ? (textOverlay.size * 100 * 1.4) + 1 : 0;
 
   let lx: number, ly: number;
   if (logo.position === "bottom-center") {
     lx = (format.width - logoW) / 2;
-    const safeBottomPct = (SAFE_BOTTOM[format.id] ?? 10) + 1;
-    ly = format.height * (1 - safeBottomPct / 100) - logoH;
+    ly = format.height * (1 - (safeBottomPct + textHeightPct) / 100) - logoH;
   } else {
     if (logo.position.includes("left")) lx = margin;
     else lx = format.width - logoW - margin;
     if (logo.position.includes("top")) ly = margin;
-    else ly = format.height - logoH - margin;
+    else {
+      const bottomOffset = hasTextAtBottom ? textHeightPct : 0;
+      ly = format.height * (1 - (4 + bottomOffset) / 100) - logoH;
+    }
   }
 
   ctx.globalAlpha = logo.opacity;
@@ -153,13 +163,17 @@ async function compositeTextOnBlob(
   const lineHeight = fontSize * 1.2;
   const totalHeight = lines.length * lineHeight;
 
+  const SAFE_BOTTOM: Record<string, number> = { story: 35, portrait: 15, square: 10 };
+  const safeBottomPct = (SAFE_BOTTOM[format.id] ?? 10) + 1;
+
   let startY: number;
   if (text.position === "center") {
     startY = (format.height - totalHeight) / 2 + fontSize;
   } else if (text.position.includes("top")) {
     startY = margin + fontSize;
   } else {
-    startY = format.height - margin - totalHeight + fontSize;
+    // Position text just above the safe zone
+    startY = format.height * (1 - safeBottomPct / 100) - totalHeight + fontSize;
   }
 
   let textAlign: CanvasTextAlign = "left";

@@ -227,53 +227,74 @@ const CropEditor = ({
             }}
           />
         )}
-        {logo && (
-          <img
-            src={logo.src}
-            alt="Logo overlay"
-            draggable={false}
-            className="absolute pointer-events-none select-none z-10"
-            style={{
-              width: `${logo.scale * 100}%`,
-              opacity: logo.opacity,
-              ...(logo.position === "bottom-center"
-                ? {
-                    bottom: `${(SAFE_ZONE_BOTTOM[format.id] ?? 10) + 1}%`,
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                  }
-                : {
-                    ...(logo.position.includes("top") ? { top: "4%" } : { bottom: "4%" }),
-                    ...(logo.position.includes("left") ? { left: "4%" } : { right: "4%" }),
-                  }),
-            }}
-          />
-        )}
-        {textOverlay && textOverlay.text && (
-          <div
-            className="absolute pointer-events-none select-none z-10 whitespace-pre-wrap px-[4%]"
-            style={{
-              fontFamily: textOverlay.font,
-              fontSize: `${textOverlay.size * 100}%`,
-              color: textOverlay.color,
-              opacity: textOverlay.opacity,
-              textShadow: "0 1px 4px rgba(0,0,0,0.5)",
-              lineHeight: 1.2,
-              ...(textOverlay.position === "center"
-                ? { top: "50%", left: "50%", transform: "translate(-50%, -50%)", textAlign: "center" as const }
-                : {
-                    ...(textOverlay.position.includes("top") ? { top: "4%" } : { bottom: "4%" }),
-                    ...(textOverlay.position.includes("left")
-                      ? { left: "4%", textAlign: "left" as const }
-                      : textOverlay.position.includes("right")
-                        ? { right: "4%", textAlign: "right" as const }
-                        : { left: "50%", transform: "translateX(-50%)", textAlign: "center" as const }),
-                  }),
-            }}
-          >
-            {textOverlay.text}
-          </div>
-        )}
+        {/* Text overlay — positioned above safe zone */}
+        {textOverlay && textOverlay.text && (() => {
+          const safeBottom = SAFE_ZONE_BOTTOM[format.id] ?? 10;
+          const textBottomPct = safeBottom + 1;
+          const isTextAtBottom = textOverlay.position === "bottom-center" || textOverlay.position === "bottom-left" || textOverlay.position === "bottom-right";
+
+          return (
+            <div
+              className="absolute pointer-events-none select-none z-10 whitespace-pre-wrap px-[4%]"
+              style={{
+                fontFamily: textOverlay.font,
+                fontSize: `${textOverlay.size * 100}%`,
+                color: textOverlay.color,
+                opacity: textOverlay.opacity,
+                textShadow: "0 1px 4px rgba(0,0,0,0.5)",
+                lineHeight: 1.2,
+                ...(textOverlay.position === "center"
+                  ? { top: "50%", left: "50%", transform: "translate(-50%, -50%)", textAlign: "center" as const }
+                  : {
+                      ...(textOverlay.position.includes("top")
+                        ? { top: "4%" }
+                        : { bottom: `${textBottomPct}%` }),
+                      ...(textOverlay.position.includes("left")
+                        ? { left: "4%", textAlign: "left" as const }
+                        : textOverlay.position.includes("right")
+                          ? { right: "4%", textAlign: "right" as const }
+                          : { left: "50%", transform: "translateX(-50%)", textAlign: "center" as const }),
+                    }),
+              }}
+            >
+              {textOverlay.text}
+            </div>
+          );
+        })()}
+        {/* Logo overlay — pushed above text when both at bottom */}
+        {logo && (() => {
+          const safeBottom = SAFE_ZONE_BOTTOM[format.id] ?? 10;
+          const hasTextAtBottom = textOverlay?.text && (
+            textOverlay.position === "bottom-center" || textOverlay.position === "bottom-left" || textOverlay.position === "bottom-right"
+          );
+          // Estimate text height as a % to push logo up
+          const textHeightPct = hasTextAtBottom ? (textOverlay.size * 100 * 1.4) + 1 : 0;
+
+          return (
+            <img
+              src={logo.src}
+              alt="Logo overlay"
+              draggable={false}
+              className="absolute pointer-events-none select-none z-10"
+              style={{
+                width: `${logo.scale * 100}%`,
+                opacity: logo.opacity,
+                ...(logo.position === "bottom-center"
+                  ? {
+                      bottom: `${safeBottom + 1 + textHeightPct}%`,
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                    }
+                  : {
+                      ...(logo.position.includes("top")
+                        ? { top: "4%" }
+                        : { bottom: `${4 + (hasTextAtBottom ? textHeightPct : 0)}%` }),
+                      ...(logo.position.includes("left") ? { left: "4%" } : { right: "4%" }),
+                    }),
+              }}
+            />
+          );
+        })()}
       </div>
 
       {/* Zoom slider */}
