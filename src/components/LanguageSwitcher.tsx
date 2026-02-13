@@ -18,7 +18,7 @@ const LanguageSwitcher = () => {
               : "text-muted-foreground hover:text-foreground hover:bg-muted"
           }`}
         >
-          {FLAGS[l]} {l.toUpperCase()}
+          {l.toUpperCase()}
         </button>
       ))}
     </div>
