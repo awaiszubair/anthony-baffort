@@ -17,6 +17,10 @@ const translations = {
     downloadAll: "Download alles",
     exporting: "Exporteren…",
     safeZoneLabel: "Safe zone",
+    newPhotoTitle: "Volgende foto?",
+    newPhotoDescription: "Wil je nog een foto toevoegen?",
+    yes: "Ja",
+    no: "Nee",
   },
   fr: {
     title: "Image & Video Resizer",
@@ -32,6 +36,10 @@ const translations = {
     downloadAll: "Tout télécharger",
     exporting: "Exportation…",
     safeZoneLabel: "Safe zone",
+    newPhotoTitle: "Photo suivante?",
+    newPhotoDescription: "Voulez-vous ajouter une autre photo?",
+    yes: "Oui",
+    no: "Non",
   },
   en: {
     title: "Image & Video Resizer",
@@ -47,6 +55,10 @@ const translations = {
     downloadAll: "Download all",
     exporting: "Exporting…",
     safeZoneLabel: "Safe zone",
+    newPhotoTitle: "Next photo?",
+    newPhotoDescription: "Would you like to add another photo?",
+    yes: "Yes",
+    no: "No",
   },
 } as const;
 

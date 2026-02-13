@@ -4,6 +4,14 @@ import DropZone from "@/components/DropZone";
 import FormatOutput from "@/components/FormatOutput";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useI18n } from "@/lib/i18n";
 import { FORMATS, detectMediaType, downloadBlob, renderImageToCanvas, renderVideoToBlob, type MediaType } from "@/lib/mediaUtils";
 
@@ -12,6 +20,7 @@ const Index = () => {
   const [mediaType, setMediaType] = useState<MediaType>("image");
   const [showSafeZones, setShowSafeZones] = useState(true);
   const [downloadingAll, setDownloadingAll] = useState(false);
+  const [showNewPhotoDialog, setShowNewPhotoDialog] = useState(false);
   const { t } = useI18n();
 
   const mediaSrc = useMemo(() => (file ? URL.createObjectURL(file) : ""), [file]);
@@ -56,10 +65,11 @@ const Index = () => {
         }
         downloadBlob(blob, `${baseName}_${format.ratio.replace(":", "x")}.${ext}`);
       }
-    } catch (e) {
+     } catch (e) {
       console.error("Download all failed:", e);
     } finally {
       setDownloadingAll(false);
+      setShowNewPhotoDialog(true);
     }
   };
 
@@ -166,6 +176,22 @@ const Index = () => {
           </div>
         )}
       </main>
+
+      <AlertDialog open={showNewPhotoDialog} onOpenChange={setShowNewPhotoDialog}>
+        <AlertDialogContent>
+          <AlertDialogTitle>{t.newPhotoTitle}</AlertDialogTitle>
+          <AlertDialogDescription>{t.newPhotoDescription}</AlertDialogDescription>
+          <div className="flex gap-3 justify-end">
+            <AlertDialogCancel>{t.no}</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              handleReset();
+              setShowNewPhotoDialog(false);
+            }}>
+              {t.yes}
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
