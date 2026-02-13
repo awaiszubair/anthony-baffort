@@ -6,24 +6,17 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const GRAPH_API_VERSION = "v22.0";
+const GRAPH_API_BASE = `https://graph.facebook.com/${GRAPH_API_VERSION}`;
+
 interface RequestBody {
   search_query: string;
+  page_id?: string;
   limit?: number;
-}
-
-interface MetaAdResponse {
-  ads: Array<{
-    id: string;
-    name: string;
-    image_url?: string;
-    text?: string;
-    platform?: string;
-    created_at?: string;
-  }>;
+  country?: string;
 }
 
 serve(async (req: Request) => {
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -32,116 +25,93 @@ serve(async (req: Request) => {
     const META_APP_ID = Deno.env.get("META_APP_ID");
     const META_APP_SECRET = Deno.env.get("META_APP_SECRET");
 
-    if (!META_APP_ID) {
-      throw new Error("META_APP_ID is not configured");
-    }
+    if (!META_APP_ID) throw new Error("META_APP_ID is not configured");
+    if (!META_APP_SECRET) throw new Error("META_APP_SECRET is not configured");
 
-    if (!META_APP_SECRET) {
-      throw new Error("META_APP_SECRET is not configured");
-    }
+    // App access token for Ad Library API
+    const accessToken = `${META_APP_ID}|${META_APP_SECRET}`;
 
     const body: RequestBody = await req.json();
-    const { search_query, limit = 20 } = body;
+    const { search_query, page_id, limit = 20, country = "ALL" } = body;
 
-    if (!search_query) {
-      throw new Error("search_query is required");
+    if (!search_query && !page_id) {
+      throw new Error("search_query or page_id is required");
     }
 
-    // For now, return mock data since the Ad Library API requires proper OAuth setup
-    // In production, you would use the real Meta Ad Library API endpoint
-    const mockAds = [
-      {
-        id: "1",
-        name: "Creative Design Campaign",
-        image_url:
-          "https://via.placeholder.com/300x300?text=Creative+Design",
-        text: "Discover our stunning design portfolio and get inspired for your next project.",
-        platform: "instagram",
-        created_at: new Date(
-          Date.now() - 7 * 24 * 60 * 60 * 1000
-        ).toISOString(),
-      },
-      {
-        id: "2",
-        name: "Digital Marketing Solutions",
-        image_url:
-          "https://via.placeholder.com/300x300?text=Marketing+Solutions",
-        text: "Transform your business with our cutting-edge digital marketing strategies.",
-        platform: "facebook",
-        created_at: new Date(
-          Date.now() - 5 * 24 * 60 * 60 * 1000
-        ).toISOString(),
-      },
-      {
-        id: "3",
-        name: "Modern Tech Innovation",
-        image_url:
-          "https://via.placeholder.com/300x300?text=Tech+Innovation",
-        text: "Stay ahead with the latest technology trends and innovations.",
-        platform: "instagram",
-        created_at: new Date(
-          Date.now() - 3 * 24 * 60 * 60 * 1000
-        ).toISOString(),
-      },
-      {
-        id: "4",
-        name: "Brand Excellence Awards",
-        image_url: "https://via.placeholder.com/300x300?text=Brand+Excellence",
-        text: "Award-winning campaigns that deliver exceptional results.",
-        platform: "facebook",
-        created_at: new Date().toISOString(),
-      },
-      {
-        id: "5",
-        name: "Social Media Mastery",
-        image_url:
-          "https://via.placeholder.com/300x300?text=Social+Media+Mastery",
-        text: "Master social media marketing with proven strategies and tactics.",
-        platform: "instagram",
-        created_at: new Date(
-          Date.now() - 2 * 24 * 60 * 60 * 1000
-        ).toISOString(),
-      },
-      {
-        id: "6",
-        name: "E-commerce Revolution",
-        image_url: "https://via.placeholder.com/300x300?text=E-commerce",
-        text: "Boost your online sales with our e-commerce solutions.",
-        platform: "facebook",
-        created_at: new Date(
-          Date.now() - 4 * 24 * 60 * 60 * 1000
-        ).toISOString(),
-      },
-    ];
+    // Build query params
+    const params = new URLSearchParams();
+    params.set("access_token", accessToken);
+    params.set("ad_reached_countries", `["${country}"]`);
+    params.set("ad_type", "ALL");
+    params.set("ad_active_status", "ALL");
+    params.set("limit", String(limit));
+    params.set("fields", [
+      "id",
+      "ad_creative_bodies",
+      "ad_creative_link_captions",
+      "ad_creative_link_titles",
+      "ad_delivery_start_time",
+      "ad_delivery_stop_time",
+      "ad_snapshot_url",
+      "page_id",
+      "page_name",
+      "publisher_platforms",
+      "languages",
+    ].join(","));
 
-    // Return all mock ads (in production, the Meta API handles filtering by page)
-    const response: MetaAdResponse = {
-      ads: mockAds.slice(0, limit),
-    };
+    // Use search_terms for keyword search, or search_page_ids for specific page
+    if (page_id) {
+      params.set("search_page_ids", page_id);
+      // search_terms is required even with search_page_ids — use empty string
+      params.set("search_terms", "");
+    } else {
+      params.set("search_terms", search_query);
+    }
 
-    return new Response(JSON.stringify(response), {
-      status: 200,
-      headers: {
-        ...corsHeaders,
-        "Content-Type": "application/json",
-      },
-    });
+    const url = `${GRAPH_API_BASE}/ads_archive?${params.toString()}`;
+    console.log("Fetching Meta Ad Library:", url.replace(accessToken, "***"));
+
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (!response.ok || data.error) {
+      const errMsg = data.error?.message || `Meta API error [${response.status}]`;
+      console.error("Meta API error:", JSON.stringify(data.error));
+      throw new Error(errMsg);
+    }
+
+    // Transform the response into a cleaner format
+    const ads = (data.data || []).map((ad: Record<string, unknown>) => ({
+      id: ad.id,
+      name: (ad as { ad_creative_link_titles?: string[] }).ad_creative_link_titles?.[0] ||
+            (ad as { page_name?: string }).page_name || "Untitled",
+      text: (ad as { ad_creative_bodies?: string[] }).ad_creative_bodies?.[0] || "",
+      snapshot_url: ad.ad_snapshot_url || "",
+      page_name: ad.page_name || "",
+      page_id: ad.page_id || "",
+      platform: Array.isArray(ad.publisher_platforms)
+        ? (ad.publisher_platforms as string[]).join(", ")
+        : "",
+      created_at: ad.ad_delivery_start_time || "",
+      stopped_at: ad.ad_delivery_stop_time || null,
+    }));
+
+    return new Response(
+      JSON.stringify({ ads, paging: data.paging || null }),
+      {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     console.error("Error in meta-ad-library function:", error);
 
     return new Response(
-      JSON.stringify({
-        success: false,
-        error: errorMessage,
-      }),
+      JSON.stringify({ success: false, error: errorMessage, ads: [] }),
       {
         status: 500,
-        headers: {
-          ...corsHeaders,
-          "Content-Type": "application/json",
-        },
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     );
   }
