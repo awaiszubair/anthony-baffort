@@ -27,6 +27,9 @@ const translations = {
     aiExpand: "AI Expand",
     aiExpanding: "Bezig met uitbreiden…",
     aiExpandError: "AI-uitbreiding mislukt",
+    aiRetry: "Opnieuw",
+    aiReset: "Reset",
+    aiPromptPlaceholder: "Optioneel: beschrijf wat je wilt zien…",
   },
   fr: {
     title: "Image & Video Resizer",
@@ -52,6 +55,9 @@ const translations = {
     aiExpand: "AI Expand",
     aiExpanding: "Expansion en cours…",
     aiExpandError: "L'expansion AI a échoué",
+    aiRetry: "Réessayer",
+    aiReset: "Réinitialiser",
+    aiPromptPlaceholder: "Optionnel : décrivez ce que vous voulez voir…",
   },
   en: {
     title: "Image & Video Resizer",
@@ -77,6 +83,9 @@ const translations = {
     aiExpand: "AI Expand",
     aiExpanding: "Expanding…",
     aiExpandError: "AI expansion failed",
+    aiRetry: "Retry",
+    aiReset: "Reset",
+    aiPromptPlaceholder: "Optional: describe what you want to see…",
   },
 } as const;
 
