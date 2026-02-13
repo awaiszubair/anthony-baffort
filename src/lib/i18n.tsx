@@ -21,7 +21,7 @@ const translations = {
     newPhotoDescription: "Wil je nog een foto toevoegen?",
     yes: "Ja",
     no: "Nee",
-    uploadIntro: "Kies je afbeelding of video om te resizen voor social media formaten.",
+    uploadIntro: "Upload je afbeelding of video en wij schalen het automatisch naar de drie belangrijkste advertising formaten voor Meta, Instagram en TikTok. Gebruik de safe zones om te controleren of belangrijke elementen (tekst, logo's, gezichten) niet worden afgesneden door UI-overlays van het platform.",
   },
   fr: {
     title: "Image & Video Resizer",
@@ -41,7 +41,7 @@ const translations = {
     newPhotoDescription: "Voulez-vous ajouter une autre photo?",
     yes: "Oui",
     no: "Non",
-    uploadIntro: "Choisissez votre image ou vidéo à redimensionner pour les formats des réseaux sociaux.",
+    uploadIntro: "Téléchargez votre image ou vidéo et nous la redimensionnons automatiquement aux trois formats publicitaires clés pour Meta, Instagram et TikTok. Utilisez les safe zones pour vérifier que les éléments importants (texte, logos, visages) ne sont pas coupés par les superpositions de la plateforme.",
   },
   en: {
     title: "Image & Video Resizer",
@@ -61,7 +61,7 @@ const translations = {
     newPhotoDescription: "Would you like to add another photo?",
     yes: "Yes",
     no: "No",
-    uploadIntro: "Choose your image or video to resize for social media formats.",
+    uploadIntro: "Upload your image or video and we'll automatically resize it to the three key advertising formats for Meta, Instagram and TikTok. Use the safe zones to check that important elements (text, logos, faces) aren't cut off by platform UI overlays.",
   },
 } as const;
 
