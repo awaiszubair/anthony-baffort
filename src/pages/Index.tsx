@@ -7,6 +7,7 @@ import DropZone from "@/components/DropZone";
 import FormatOutput from "@/components/FormatOutput";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import LogoEditor, { type LogoConfig } from "@/components/LogoEditor";
+import TextEditor, { type TextConfig } from "@/components/TextEditor";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -28,6 +29,7 @@ const Index = () => {
   const [downloadingAll, setDownloadingAll] = useState(false);
   const [showNewPhotoDialog, setShowNewPhotoDialog] = useState(false);
   const [logo, setLogo] = useState<LogoConfig | null>(null);
+  const [textOverlay, setTextOverlay] = useState<TextConfig | null>(null);
   const { t } = useI18n();
 
   const mediaSrc = useMemo(() => (file ? URL.createObjectURL(file) : ""), [file]);
@@ -185,6 +187,7 @@ const Index = () => {
                   </Tooltip>
                 </TooltipProvider>
                 <LogoEditor logo={logo} onLogoChange={setLogo} />
+                <TextEditor textConfig={textOverlay} onTextChange={setTextOverlay} />
               </div>
 
               <Button
@@ -214,6 +217,7 @@ const Index = () => {
                   showSafeZones={showSafeZones}
                   fixedHeight
                   logo={logo}
+                  textOverlay={textOverlay}
                 />
               ))}
             </div>

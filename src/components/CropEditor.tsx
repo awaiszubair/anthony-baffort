@@ -5,6 +5,7 @@ import SafeZoneOverlay from "@/components/SafeZoneOverlay";
 import PlatformOverlay from "@/components/PlatformOverlay";
 import type { FormatConfig, MediaType } from "@/lib/mediaUtils";
 import type { LogoConfig } from "@/components/LogoEditor";
+import type { TextConfig } from "@/components/TextEditor";
 
 const SAFE_ZONE_BOTTOM: Record<string, number> = {
   story: 35,
@@ -23,6 +24,7 @@ interface CropEditorProps {
   fixedHeight?: boolean;
   expandedBackground?: string;
   logo?: LogoConfig | null;
+  textOverlay?: TextConfig | null;
   onOffsetChange: (x: number, y: number) => void;
   onZoomChange: (zoom: number) => void;
 }
@@ -38,6 +40,7 @@ const CropEditor = ({
   fixedHeight,
   expandedBackground,
   logo,
+  textOverlay,
   onOffsetChange,
   onZoomChange,
 }: CropEditorProps) => {
@@ -238,6 +241,31 @@ const CropEditor = ({
                   }),
             }}
           />
+        )}
+        {textOverlay && textOverlay.text && (
+          <div
+            className="absolute pointer-events-none select-none z-10 whitespace-pre-wrap px-[4%]"
+            style={{
+              fontFamily: textOverlay.font,
+              fontSize: `${textOverlay.size * 100}%`,
+              color: textOverlay.color,
+              opacity: textOverlay.opacity,
+              textShadow: "0 1px 4px rgba(0,0,0,0.5)",
+              lineHeight: 1.2,
+              ...(textOverlay.position === "center"
+                ? { top: "50%", left: "50%", transform: "translate(-50%, -50%)", textAlign: "center" as const }
+                : {
+                    ...(textOverlay.position.includes("top") ? { top: "4%" } : { bottom: "4%" }),
+                    ...(textOverlay.position.includes("left")
+                      ? { left: "4%", textAlign: "left" as const }
+                      : textOverlay.position.includes("right")
+                        ? { right: "4%", textAlign: "right" as const }
+                        : { left: "50%", transform: "translateX(-50%)", textAlign: "center" as const }),
+                  }),
+            }}
+          >
+            {textOverlay.text}
+          </div>
         )}
       </div>
 
