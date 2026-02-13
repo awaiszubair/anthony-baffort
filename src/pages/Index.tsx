@@ -8,6 +8,7 @@ import FormatOutput from "@/components/FormatOutput";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import LogoEditor, { type LogoConfig } from "@/components/LogoEditor";
 import TextEditor, { type TextConfig } from "@/components/TextEditor";
+import TranslateBar from "@/components/TranslateBar";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -206,6 +207,16 @@ const Index = () => {
                 </Button>
               </div>
             </div>
+
+            {/* Translate bar */}
+            {textOverlay?.text?.trim() && (
+              <div className="flex justify-center">
+                <TranslateBar
+                  textConfig={textOverlay}
+                  onTextChange={(updated) => setTextOverlay(updated)}
+                />
+              </div>
+            )}
 
             {/* Resized formats */}
             <div className="flex flex-wrap lg:flex-nowrap gap-8 items-start justify-center">
