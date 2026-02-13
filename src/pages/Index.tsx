@@ -65,13 +65,13 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border">
-        <div className="container mx-auto flex items-center justify-between px-4 py-4">
+      <header className="border-b border-border bg-card">
+        <div className="container mx-auto flex items-center justify-between px-4 py-5">
           <div>
-            <h1 className="text-xl font-bold text-foreground tracking-tight">
-              {t.title}
+            <h1 className="text-lg font-medium tracking-tight text-foreground italic">
+              Landing Partners
             </h1>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-light">
               {t.subtitle}
             </p>
           </div>
@@ -91,14 +91,14 @@ const Index = () => {
         {!file ? (
           <div className="mx-auto max-w-xl">
             <DropZone onFileSelect={handleFile} />
-            <div className="mt-8 grid grid-cols-3 gap-3">
+            <div className="mt-10 grid grid-cols-3 gap-4">
               {FORMATS.map((f) => (
                 <div
                   key={f.id}
-                  className="rounded-lg border border-border bg-card p-3 text-center"
+                  className="rounded border border-border bg-card px-4 py-3 text-center"
                 >
-                  <p className="text-sm font-medium text-card-foreground">{f.ratio}</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-sm font-medium text-card-foreground tracking-wide">{f.ratio}</p>
+                  <p className="text-[11px] text-muted-foreground tracking-wider uppercase">
                     {f.width}×{f.height}
                   </p>
                 </div>
