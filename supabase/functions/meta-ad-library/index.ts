@@ -22,14 +22,8 @@ serve(async (req: Request) => {
   }
 
   try {
-    const META_APP_ID = Deno.env.get("META_APP_ID");
-    const META_APP_SECRET = Deno.env.get("META_APP_SECRET");
-
-    if (!META_APP_ID) throw new Error("META_APP_ID is not configured");
-    if (!META_APP_SECRET) throw new Error("META_APP_SECRET is not configured");
-
-    // App access token for Ad Library API
-    const accessToken = `${META_APP_ID}|${META_APP_SECRET}`;
+    const accessToken = Deno.env.get("META_USER_ACCESS_TOKEN");
+    if (!accessToken) throw new Error("META_USER_ACCESS_TOKEN is not configured");
 
     const body: RequestBody = await req.json();
     const { search_query, page_id, limit = 20, country = "ALL" } = body;
