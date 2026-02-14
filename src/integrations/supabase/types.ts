@@ -17,21 +17,27 @@ export type Database = {
       brands: {
         Row: {
           created_at: string
+          font_family: string | null
           id: string
+          logo_url: string | null
           name: string
           page_id: string | null
           user_id: string | null
         }
         Insert: {
           created_at?: string
+          font_family?: string | null
           id?: string
+          logo_url?: string | null
           name: string
           page_id?: string | null
           user_id?: string | null
         }
         Update: {
           created_at?: string
+          font_family?: string | null
           id?: string
+          logo_url?: string | null
           name?: string
           page_id?: string | null
           user_id?: string | null
