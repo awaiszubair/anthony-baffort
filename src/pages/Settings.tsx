@@ -1,8 +1,10 @@
 import { useRef, useState } from "react";
 import { Plus, Trash2, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import { useBrandSettings } from "@/hooks/useBrandSettings";
+import { useTrackedBrands } from "@/hooks/useTrackedBrands";
 import {
   Select,
   SelectContent,
@@ -20,8 +22,11 @@ const GOOGLE_FONTS = [
 
 const Settings = () => {
   const { brand, updateBrand, clearBrand, hasBrand } = useBrandSettings();
+  const { brands: trackedBrands, addBrand: addTrackedBrand, removeBrand: removeTrackedBrand } = useTrackedBrands();
   const [newName, setNewName] = useState("");
   const [newPageId, setNewPageId] = useState("");
+  const [newTrackedName, setNewTrackedName] = useState("");
+  const [newTrackedPageId, setNewTrackedPageId] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const addBrand = () => {
@@ -31,6 +36,15 @@ const Settings = () => {
     setNewName("");
     setNewPageId("");
     toast({ title: "Merk opgeslagen" });
+  };
+
+  const handleAddTrackedBrand = () => {
+    const trimmed = newTrackedName.trim();
+    if (!trimmed) return;
+    addTrackedBrand(trimmed, newTrackedPageId.trim());
+    setNewTrackedName("");
+    setNewTrackedPageId("");
+    toast({ title: "Merk toegevoegd aan inspiratie" });
   };
 
   const handleLogoUpload = (file: File) => {
@@ -55,13 +69,13 @@ const Settings = () => {
       <div className="container mx-auto px-4 py-8 max-w-2xl">
         <h1 className="text-3xl font-bold text-foreground mb-2">Settings</h1>
         <p className="text-muted-foreground mb-8">
-          Beheer je merk, logo en lettertype.
+          Beheer je merk, logo, lettertype en gevolgde merken voor inspiratie.
         </p>
 
         {/* Add brand form */}
         {!hasBrand && (
           <div className="rounded-lg border border-border bg-card p-6 mb-8">
-            <h2 className="text-lg font-semibold text-foreground mb-4">Merk toevoegen</h2>
+            <h2 className="text-lg font-semibold text-foreground mb-4">Je merk</h2>
             <div className="flex flex-col gap-3">
               <input
                 type="text"
@@ -88,7 +102,7 @@ const Settings = () => {
               </p>
               <Button onClick={addBrand} disabled={!newName.trim()} className="gap-2 self-start">
                 <Plus className="h-4 w-4" />
-                Merk toevoegen
+                Merk opslaan
               </Button>
             </div>
           </div>
@@ -187,6 +201,60 @@ const Settings = () => {
             </div>
           </div>
         )}
+
+        {/* Tracked brands for Inspiration Ads */}
+        <div className="rounded-lg border border-border bg-card p-6 mt-8">
+          <h2 className="text-lg font-semibold text-foreground mb-2">Inspiratie merken</h2>
+          <p className="text-xs text-muted-foreground mb-4">
+            Merken die je wilt volgen in Inspiration Ads. Je kunt ze daar ook ter plaatse toevoegen.
+          </p>
+
+          {trackedBrands.length > 0 && (
+            <div className="space-y-2 mb-4">
+              {trackedBrands.map((b) => (
+                <div key={b.id} className="flex items-center justify-between rounded-lg border border-border bg-background px-4 py-2">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{b.name}</p>
+                    {b.pageId && <p className="text-xs text-muted-foreground">Page ID: {b.pageId}</p>}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+                    onClick={() => { removeTrackedBrand(b.id); toast({ title: "Merk verwijderd" }); }}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="flex gap-2 items-end">
+            <div className="flex-1">
+              <Input
+                placeholder="Merknaam"
+                value={newTrackedName}
+                onChange={(e) => setNewTrackedName(e.target.value)}
+                className="text-sm"
+                onKeyDown={(e) => e.key === "Enter" && handleAddTrackedBrand()}
+              />
+            </div>
+            <div className="w-36">
+              <Input
+                placeholder="Page ID"
+                value={newTrackedPageId}
+                onChange={(e) => setNewTrackedPageId(e.target.value)}
+                className="text-sm"
+                onKeyDown={(e) => e.key === "Enter" && handleAddTrackedBrand()}
+              />
+            </div>
+            <Button onClick={handleAddTrackedBrand} disabled={!newTrackedName.trim()} size="sm" className="gap-1.5">
+              <Plus className="h-3.5 w-3.5" />
+              Toevoegen
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );

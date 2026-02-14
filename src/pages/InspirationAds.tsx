@@ -1,8 +1,11 @@
-import { useState, useEffect } from "react";
-import { Loader2, AlertCircle, ExternalLink } from "lucide-react";
+import { useState } from "react";
+import { Loader2, AlertCircle, ExternalLink, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
+import { useTrackedBrands, type TrackedBrand } from "@/hooks/useTrackedBrands";
+import { toast } from "@/hooks/use-toast";
 
 interface MetaAd {
   id: string;
@@ -15,42 +18,28 @@ interface MetaAd {
   stopped_at?: string | null;
 }
 
-interface Brand {
-  id: string;
-  name: string;
-  page_id: string | null;
-}
-
 const InspirationAds = () => {
+  const { brands, addBrand, removeBrand } = useTrackedBrands();
   const [ads, setAds] = useState<MetaAd[]>([]);
-  const [brands, setBrands] = useState<Brand[]>([]);
-  const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
+  const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newPageId, setNewPageId] = useState("");
 
-  useEffect(() => {
-    const loadBrands = async () => {
-      const { data } = await supabase
-        .from("brands")
-        .select("*")
-        .order("name", { ascending: true });
-      setBrands(data || []);
-    };
-    loadBrands();
-  }, []);
-
-  const fetchAds = async (brand: Brand) => {
+  const fetchAds = async (brand: TrackedBrand) => {
     setLoading(true);
     setError(null);
+    setSelectedBrandId(brand.id);
     try {
       const res = await supabase.functions.invoke("meta-ad-library", {
         body: {
           search_query: brand.name,
-          page_id: brand.page_id || undefined,
+          page_id: brand.pageId || undefined,
           limit: 25,
         },
       });
-
       if (res.error) throw new Error(res.error.message);
       if (res.data?.error) throw new Error(res.data.error);
       setAds(res.data?.ads || []);
@@ -61,17 +50,14 @@ const InspirationAds = () => {
     }
   };
 
-  useEffect(() => {
-    if (brands.length > 0 && !selectedBrand) {
-      const first = brands[0];
-      setSelectedBrand(first.id);
-      fetchAds(first);
-    }
-  }, [brands]);
-
-  const handleBrandClick = (brand: Brand) => {
-    setSelectedBrand(brand.id);
-    fetchAds(brand);
+  const handleAddBrand = () => {
+    const trimmed = newName.trim();
+    if (!trimmed) return;
+    addBrand(trimmed, newPageId.trim());
+    setNewName("");
+    setNewPageId("");
+    setShowAddForm(false);
+    toast({ title: "Merk toegevoegd" });
   };
 
   return (
@@ -84,29 +70,72 @@ const InspirationAds = () => {
           </p>
         </div>
 
-        {/* Brand filter chips */}
-        {brands.length > 0 ? (
-          <div className="mb-8 flex flex-wrap gap-2">
-            {brands.map((brand) => (
+        {/* Brand filter chips + add */}
+        <div className="mb-8 flex flex-wrap gap-2 items-center">
+          {brands.map((brand) => (
+            <div key={brand.id} className="flex items-center gap-0.5">
               <Button
-                key={brand.id}
-                variant={selectedBrand === brand.id ? "default" : "outline"}
+                variant={selectedBrandId === brand.id ? "default" : "outline"}
                 size="sm"
-                onClick={() => handleBrandClick(brand)}
+                onClick={() => fetchAds(brand)}
                 disabled={loading}
               >
                 {brand.name}
               </Button>
-            ))}
-          </div>
-        ) : (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                onClick={() => {
+                  removeBrand(brand.id);
+                  if (selectedBrandId === brand.id) {
+                    setAds([]);
+                    setSelectedBrandId(null);
+                  }
+                  toast({ title: "Merk verwijderd" });
+                }}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </div>
+          ))}
+          {showAddForm ? (
+            <div className="flex items-center gap-2">
+              <Input
+                placeholder="Merknaam"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                className="h-8 w-36 text-sm"
+                autoFocus
+                onKeyDown={(e) => e.key === "Enter" && handleAddBrand()}
+              />
+              <Input
+                placeholder="Page ID"
+                value={newPageId}
+                onChange={(e) => setNewPageId(e.target.value)}
+                className="h-8 w-28 text-sm"
+                onKeyDown={(e) => e.key === "Enter" && handleAddBrand()}
+              />
+              <Button size="sm" onClick={handleAddBrand} disabled={!newName.trim()}>
+                <Plus className="h-3.5 w-3.5" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => { setShowAddForm(false); setNewName(""); setNewPageId(""); }}>
+                <X className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          ) : (
+            <Button variant="outline" size="sm" onClick={() => setShowAddForm(true)} className="gap-1.5">
+              <Plus className="h-3.5 w-3.5" />
+              Merk toevoegen
+            </Button>
+          )}
+        </div>
+
+        {brands.length === 0 && !showAddForm && (
           <div className="mb-8 rounded-lg border border-border bg-card p-6 text-center">
             <p className="text-muted-foreground mb-3">
-              No brands configured yet. Add brands in Settings to get started.
+              Nog geen merken toegevoegd. Voeg een merk toe om advertenties te bekijken.
             </p>
-            <Button variant="outline" size="sm" asChild>
-              <a href="/settings">Go to Settings</a>
-            </Button>
           </div>
         )}
 
@@ -130,7 +159,6 @@ const InspirationAds = () => {
                 key={ad.id}
                 className="rounded-lg border border-border bg-card overflow-hidden hover:shadow-lg transition-shadow"
               >
-                {/* Snapshot iframe preview */}
                 {ad.snapshot_url && (
                   <div className="aspect-square overflow-hidden bg-muted relative">
                     <iframe
@@ -171,7 +199,7 @@ const InspirationAds = () => {
           </div>
         )}
 
-        {!loading && ads.length === 0 && !error && brands.length > 0 && (
+        {!loading && ads.length === 0 && !error && selectedBrandId && (
           <div className="text-center py-12">
             <p className="text-muted-foreground">No ads found for this brand.</p>
           </div>
