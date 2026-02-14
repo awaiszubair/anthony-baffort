@@ -68,6 +68,48 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_ads: {
+        Row: {
+          ad_id: string
+          ad_name: string | null
+          ad_text: string | null
+          created_at: string
+          id: string
+          image_url: string | null
+          page_id: string | null
+          page_name: string | null
+          platform: string | null
+          snapshot_url: string | null
+          user_id: string
+        }
+        Insert: {
+          ad_id: string
+          ad_name?: string | null
+          ad_text?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          page_id?: string | null
+          page_name?: string | null
+          platform?: string | null
+          snapshot_url?: string | null
+          user_id: string
+        }
+        Update: {
+          ad_id?: string
+          ad_name?: string | null
+          ad_text?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          page_id?: string | null
+          page_name?: string | null
+          platform?: string | null
+          snapshot_url?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string

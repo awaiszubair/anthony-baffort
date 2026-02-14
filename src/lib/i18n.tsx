@@ -101,6 +101,11 @@ const translations = {
     searchingPages: "Pagina's zoeken…",
     searchPagesHint: "Zoek op merknaam om beschikbare Facebook/Instagram-pagina's te vinden.",
     allBrands: "Alle",
+    adSave: "Opslaan",
+    adUnsave: "Verwijderen uit opgeslagen",
+    adSaved: "Advertentie opgeslagen",
+    adUnsaved: "Advertentie verwijderd uit opgeslagen",
+    downloadAd: "Afbeelding downloaden",
   },
   fr: {
     title: "Image & Video Resizer",
@@ -195,6 +200,11 @@ const translations = {
     searchingPages: "Recherche de pages…",
     searchPagesHint: "Recherchez un nom de marque pour trouver les pages Facebook/Instagram disponibles.",
     allBrands: "Tous",
+    adSave: "Enregistrer",
+    adUnsave: "Retirer des enregistrements",
+    adSaved: "Publicité enregistrée",
+    adUnsaved: "Publicité retirée des enregistrements",
+    downloadAd: "Télécharger l'image",
   },
   en: {
     title: "Image & Video Resizer",
@@ -289,6 +299,11 @@ const translations = {
     searchingPages: "Searching pages…",
     searchPagesHint: "Search by brand name to find available Facebook/Instagram pages.",
     allBrands: "All",
+    adSave: "Save",
+    adUnsave: "Remove from saved",
+    adSaved: "Ad saved",
+    adUnsaved: "Ad removed from saved",
+    downloadAd: "Download image",
   },
 } as const;
 
