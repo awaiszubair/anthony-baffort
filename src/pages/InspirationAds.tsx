@@ -347,19 +347,21 @@ const InspirationAds = () => {
                     <div className="w-full h-full flex items-center justify-center text-muted-foreground"><Eye className="h-8 w-8" /></div>
                   )}
                   <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    {user && (
-                      <button
-                        onClick={() => {
-                          toggleSave(ad).then((saved) => {
-                            toast({ title: saved ? t.adSaved : t.adUnsaved });
-                          });
-                        }}
-                        className="p-1.5 rounded-md bg-card/80 hover:bg-card text-foreground transition-colors"
-                        title={isSaved(ad.id) ? t.adUnsave : t.adSave}
-                      >
-                        <Bookmark className={`h-4 w-4 ${isSaved(ad.id) ? "fill-current" : ""}`} />
-                      </button>
-                    )}
+                    <button
+                      onClick={() => {
+                        if (!user) {
+                          toast({ title: t.loginToSave, variant: "destructive" });
+                          return;
+                        }
+                        toggleSave(ad).then((saved) => {
+                          toast({ title: saved ? t.adSaved : t.adUnsaved });
+                        });
+                      }}
+                      className="p-1.5 rounded-md bg-card/80 hover:bg-card text-foreground transition-colors"
+                      title={isSaved(ad.id) ? t.adUnsave : t.adSave}
+                    >
+                      <Bookmark className={`h-4 w-4 ${isSaved(ad.id) ? "fill-current" : ""}`} />
+                    </button>
                     {(ad.image_url && !ad.image_url.startsWith("gradient:")) && (
                       <a href={ad.image_url} download target="_blank" rel="noopener noreferrer"
                         className="p-1.5 rounded-md bg-card/80 hover:bg-card text-foreground transition-colors"
