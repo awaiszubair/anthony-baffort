@@ -95,6 +95,11 @@ const translations = {
     noAdsFound: "Geen advertenties gevonden voor dit merk.",
     active: "Actief",
     stopped: "Gestopt",
+    searchPages: "Zoeken",
+    selectPage: "Selecteer de juiste pagina:",
+    adsFound: "advertenties",
+    searchingPages: "Pagina's zoeken…",
+    searchPagesHint: "Zoek op merknaam om beschikbare Facebook/Instagram-pagina's te vinden.",
   },
   fr: {
     title: "Image & Video Resizer",
@@ -183,6 +188,11 @@ const translations = {
     noAdsFound: "Aucune publicité trouvée pour cette marque.",
     active: "Actif",
     stopped: "Arrêté",
+    searchPages: "Rechercher",
+    selectPage: "Sélectionnez la bonne page :",
+    adsFound: "publicités",
+    searchingPages: "Recherche de pages…",
+    searchPagesHint: "Recherchez un nom de marque pour trouver les pages Facebook/Instagram disponibles.",
   },
   en: {
     title: "Image & Video Resizer",
@@ -271,6 +281,11 @@ const translations = {
     noAdsFound: "No ads found for this brand.",
     active: "Active",
     stopped: "Stopped",
+    searchPages: "Search",
+    selectPage: "Select the correct page:",
+    adsFound: "ads",
+    searchingPages: "Searching pages…",
+    searchPagesHint: "Search by brand name to find available Facebook/Instagram pages.",
   },
 } as const;
 

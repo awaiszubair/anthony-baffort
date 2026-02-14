@@ -25,16 +25,14 @@ const Settings = () => {
   const { brand, updateBrand } = useBrandSettings();
   const { brands: trackedBrands, addBrand: addTrackedBrand, removeBrand: removeTrackedBrand } = useTrackedBrands();
   const [newTrackedName, setNewTrackedName] = useState("");
-  const [newTrackedPageId, setNewTrackedPageId] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { t } = useI18n();
 
   const handleAddTrackedBrand = () => {
     const trimmed = newTrackedName.trim();
     if (!trimmed) return;
-    addTrackedBrand(trimmed, newTrackedPageId.trim());
+    addTrackedBrand(trimmed, "");
     setNewTrackedName("");
-    setNewTrackedPageId("");
     toast({ title: t.brandAdded });
   };
 
@@ -165,20 +163,12 @@ const Settings = () => {
                   onKeyDown={(e) => e.key === "Enter" && handleAddTrackedBrand()}
                 />
               </div>
-              <div className="w-36">
-                <Input
-                  placeholder="Page ID"
-                  value={newTrackedPageId}
-                  onChange={(e) => setNewTrackedPageId(e.target.value)}
-                  className="text-sm"
-                  onKeyDown={(e) => e.key === "Enter" && handleAddTrackedBrand()}
-                />
-              </div>
               <Button onClick={handleAddTrackedBrand} disabled={!newTrackedName.trim()} size="sm" className="gap-1.5">
                 <Plus className="h-3.5 w-3.5" />
                 {t.add}
               </Button>
             </div>
+            <p className="text-xs text-muted-foreground mt-2">{t.searchPagesHint}</p>
           </div>
         </div>
       </div>
