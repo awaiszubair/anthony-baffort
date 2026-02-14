@@ -119,10 +119,8 @@ const Index = () => {
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8 flex items-start justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">Resizer</h1>
-            <p className="text-muted-foreground">
-              Upload een afbeelding of video en resize naar alle advertentieformaten.
-            </p>
+            <h1 className="text-3xl font-bold text-foreground mb-2">{t.resizerTitle}</h1>
+            <p className="text-muted-foreground">{t.resizerDescription}</p>
           </div>
           {file && (
             <div className="flex items-center gap-2 pt-1">
