@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { Plus, Trash2, Loader2, Upload, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Plus, Trash2, Loader2, Upload, X, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -47,6 +48,7 @@ interface Brand {
 
 const Settings = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
   const [newName, setNewName] = useState("");
@@ -56,6 +58,10 @@ const Settings = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchBrands = async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
     const { data, error } = await supabase
       .from("brands")
       .select("*")
@@ -71,7 +77,7 @@ const Settings = () => {
 
   useEffect(() => {
     fetchBrands();
-  }, []);
+  }, [user]);
 
   const hasBrand = brands.some((b) => b.user_id === user?.id);
   const userBrand = brands.find((b) => b.user_id === user?.id);
@@ -185,8 +191,22 @@ const Settings = () => {
           Beheer je merk, logo en lettertype.
         </p>
 
-        {/* Add brand form — only show if user has no brand yet */}
-        {!hasBrand && (
+        {/* Not logged in */}
+        {!user && (
+          <div className="rounded-lg border border-border bg-card p-8 text-center">
+            <h2 className="text-lg font-semibold text-foreground mb-2">Log in om je merk in te stellen</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              Stel je merknaam, logo en lettertype in om de tool te personaliseren.
+            </p>
+            <Button onClick={() => navigate("/auth")} className="gap-2">
+              <LogIn className="h-4 w-4" />
+              Inloggen
+            </Button>
+          </div>
+        )}
+
+        {/* Add brand form — only show if user is logged in but has no brand yet */}
+        {user && !hasBrand && (
           <div className="rounded-lg border border-border bg-card p-6 mb-8">
             <h2 className="text-lg font-semibold text-foreground mb-4">Merk toevoegen</h2>
             <div className="flex flex-col gap-3">
