@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Loader2, AlertCircle, ExternalLink, Plus, X, Eye, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -77,7 +77,7 @@ const MockAdImage = ({ gradient, name }: { gradient: string; name: string }) => 
 
 const InspirationAds = () => {
   const { brands, addBrand, removeBrand } = useTrackedBrands();
-  const [ads, setAds] = useState<MetaAd[]>([]);
+  const [allAds, setAllAds] = useState<MetaAd[]>([]);
   const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -86,31 +86,53 @@ const InspirationAds = () => {
   const [newName, setNewName] = useState("");
   const [searching, setSearching] = useState(false);
   const [discoveredPages, setDiscoveredPages] = useState<DiscoveredPage[]>([]);
+  const [initialLoaded, setInitialLoaded] = useState(false);
   const { t } = useI18n();
 
-  const fetchAds = async (brand: TrackedBrand) => {
+  // Load all brands' ads on mount and when brands change
+  const fetchAllAds = async () => {
+    if (brands.length === 0) { setAllAds([]); setInitialLoaded(true); return; }
     setLoading(true);
     setError(null);
-    setSelectedBrandId(brand.id);
+
     if (USE_MOCK) {
       await new Promise((r) => setTimeout(r, 600));
-      setAds(generateMockAds(brand.name));
+      const combined = brands.flatMap((b) => generateMockAds(b.name));
+      setAllAds(combined);
       setLoading(false);
+      setInitialLoaded(true);
       return;
     }
+
     try {
-      const res = await supabase.functions.invoke("meta-ad-library", {
-        body: { search_query: brand.name, page_id: brand.pageId || undefined, limit: 25 },
-      });
-      if (res.error) throw new Error(res.error.message);
-      if (res.data?.error) throw new Error(res.data.error);
-      setAds(res.data?.ads || []);
+      const results: MetaAd[] = [];
+      for (const brand of brands) {
+        const res = await supabase.functions.invoke("meta-ad-library", {
+          body: { search_query: brand.name, page_id: brand.pageId || undefined, limit: 25 },
+        });
+        if (res.data?.ads) {
+          results.push(...res.data.ads.map((ad: MetaAd) => ({ ...ad, _brandId: brand.id })));
+        }
+      }
+      setAllAds(results);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load ads");
     } finally {
       setLoading(false);
+      setInitialLoaded(true);
     }
   };
+
+  // Auto-load on mount
+  useEffect(() => { fetchAllAds(); }, [brands.length]);
+
+  // Filter ads by selected brand
+  const filteredAds = selectedBrandId
+    ? allAds.filter((ad) => {
+        const brand = brands.find((b) => b.id === selectedBrandId);
+        return brand && ad.page_name?.toLowerCase() === brand.name.toLowerCase();
+      })
+    : allAds;
 
   const searchPages = async () => {
     const trimmed = newName.trim();
@@ -165,6 +187,8 @@ const InspirationAds = () => {
     addBrand(page.page_name, page.page_id);
     toast({ title: t.brandAdded });
     resetAddForm();
+    // Reload ads to include the new brand
+    setTimeout(() => fetchAllAds(), 100);
   };
 
   const resetAddForm = () => {
@@ -183,13 +207,18 @@ const InspirationAds = () => {
 
         {/* Brand filter chips + add */}
         <div className="mb-8 flex flex-wrap gap-2 items-center">
+          {brands.length > 1 && (
+            <Button variant={selectedBrandId === null ? "default" : "outline"} size="sm" onClick={() => setSelectedBrandId(null)} disabled={loading}>
+              {t.allBrands}
+            </Button>
+          )}
           {brands.map((brand) => (
             <div key={brand.id} className="flex items-center gap-0.5">
-              <Button variant={selectedBrandId === brand.id ? "default" : "outline"} size="sm" onClick={() => fetchAds(brand)} disabled={loading}>
+              <Button variant={selectedBrandId === brand.id ? "default" : "outline"} size="sm" onClick={() => setSelectedBrandId(brand.id)} disabled={loading}>
                 {brand.name}
               </Button>
               <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                onClick={() => { removeBrand(brand.id); if (selectedBrandId === brand.id) { setAds([]); setSelectedBrandId(null); } toast({ title: t.brandRemoved }); }}>
+                onClick={() => { removeBrand(brand.id); if (selectedBrandId === brand.id) setSelectedBrandId(null); fetchAllAds(); toast({ title: t.brandRemoved }); }}>
                 <X className="h-3 w-3" />
               </Button>
             </div>
@@ -275,8 +304,8 @@ const InspirationAds = () => {
           </div>
         )}
 
-        {brands.length > 0 && !selectedBrandId && !loading && ads.length === 0 && (
-          <div className="text-center py-12"><p className="text-muted-foreground">{t.selectBrandPrompt}</p></div>
+        {brands.length > 0 && initialLoaded && !loading && filteredAds.length === 0 && !error && (
+          <div className="text-center py-12"><p className="text-muted-foreground">{t.noAdsFound}</p></div>
         )}
 
         {error && (
@@ -290,9 +319,9 @@ const InspirationAds = () => {
           <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
         )}
 
-        {!loading && ads.length > 0 && (
+        {!loading && filteredAds.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {ads.map((ad) => (
+            {filteredAds.map((ad) => (
               <div key={ad.id} className="rounded-lg border border-border bg-card overflow-hidden hover:shadow-lg transition-shadow group">
                 <div className="aspect-square overflow-hidden bg-muted relative">
                   {ad.snapshot_url ? (
@@ -328,7 +357,7 @@ const InspirationAds = () => {
           </div>
         )}
 
-        {!loading && ads.length === 0 && !error && selectedBrandId && (
+        {!loading && filteredAds.length === 0 && !error && selectedBrandId && initialLoaded && (
           <div className="text-center py-12"><p className="text-muted-foreground">{t.noAdsFound}</p></div>
         )}
       </div>
