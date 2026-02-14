@@ -277,7 +277,18 @@ const InspirationAds = () => {
                           {page.adCount} {t.adsFound} · {page.platforms.map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(", ")}
                         </p>
                       </div>
-                      <span className="text-xs text-muted-foreground font-mono">{page.page_id}</span>
+                      <div className="flex items-center gap-2">
+                        <a
+                          href={`https://www.facebook.com/${page.page_id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                          title={t.visitPage}
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </a>
+                      </div>
                     </div>
                   </button>
                 ))}
