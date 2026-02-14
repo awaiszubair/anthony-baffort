@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/sidebar";
 
 const items = [
-  { title: "Ad Creative Resize", url: "/", icon: BarChart3 },
+  { title: "Resizer", url: "/", icon: BarChart3 },
   { title: "Inspiration Ads", url: "/inspiration", icon: Lightbulb },
   { title: "Settings", url: "/settings", icon: Settings },
 ];
