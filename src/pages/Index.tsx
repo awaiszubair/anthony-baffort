@@ -1,12 +1,13 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { RotateCcw, Shield, ShieldOff, Download, Loader2, Moon, Sun, Info, Languages } from "lucide-react";
 import { useDarkMode } from "@/hooks/use-dark-mode";
 import { useBrandSettings } from "@/hooks/useBrandSettings";
+import { useResizerState } from "@/hooks/useResizerState";
 import DropZone from "@/components/DropZone";
 import FormatOutput from "@/components/FormatOutput";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import LogoEditor, { type LogoConfig } from "@/components/LogoEditor";
-import TextEditor, { type TextConfig } from "@/components/TextEditor";
+import LogoEditor from "@/components/LogoEditor";
+import TextEditor from "@/components/TextEditor";
 import TranslateBar from "@/components/TranslateBar";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,20 +20,19 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useI18n } from "@/lib/i18n";
-import { FORMATS, detectMediaType, downloadBlob, renderImageToCanvas, renderVideoToBlob, type MediaType } from "@/lib/mediaUtils";
+import { FORMATS, downloadBlob, renderImageToCanvas, renderVideoToBlob } from "@/lib/mediaUtils";
 
 const Index = () => {
   const { isDark, toggle: toggleDark } = useDarkMode();
-  const { brand, hasBrand } = useBrandSettings();
-  const [file, setFile] = useState<File | null>(null);
-  const [mediaType, setMediaType] = useState<MediaType>("image");
-  const [showSafeZones, setShowSafeZones] = useState(true);
+  const { brand } = useBrandSettings();
+  const {
+    file, mediaType, mediaSrc, showSafeZones, showTranslateBar,
+    logo, textOverlay, brandDefaultsApplied,
+    handleFile, setShowSafeZones, setShowTranslateBar,
+    setLogo, setTextOverlay, setBrandDefaultsApplied, reset,
+  } = useResizerState();
   const [downloadingAll, setDownloadingAll] = useState(false);
   const [showNewPhotoDialog, setShowNewPhotoDialog] = useState(false);
-  const [showTranslateBar, setShowTranslateBar] = useState(false);
-  const [logo, setLogo] = useState<LogoConfig | null>(null);
-  const [textOverlay, setTextOverlay] = useState<TextConfig | null>(null);
-  const [brandDefaultsApplied, setBrandDefaultsApplied] = useState(false);
   const { t } = useI18n();
 
   // Apply brand defaults from settings on first file upload
@@ -60,15 +60,8 @@ const Index = () => {
     }
   }, [file, brandDefaultsApplied]);
 
-  const mediaSrc = useMemo(() => (file ? URL.createObjectURL(file) : ""), [file]);
-
   const isValidFile = (f: File) =>
     f.type.startsWith("image/") || f.type.startsWith("video/");
-
-  const handleFile = (f: File) => {
-    setMediaType(detectMediaType(f));
-    setFile(f);
-  };
 
   const handleGlobalDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -84,11 +77,6 @@ const Index = () => {
     },
     []
   );
-
-  const handleReset = () => {
-    setFile(null);
-    setBrandDefaultsApplied(false);
-  };
 
   const handleDownloadAll = async () => {
     if (!file) return;
@@ -138,7 +126,7 @@ const Index = () => {
             </button>
             <LanguageSwitcher />
             {file && (
-              <Button variant="outline" size="sm" onClick={handleReset} className="gap-1.5">
+              <Button variant="outline" size="sm" onClick={reset} className="gap-1.5">
                 <RotateCcw className="h-3.5 w-3.5" />
                 {t.reset}
               </Button>
@@ -291,7 +279,7 @@ const Index = () => {
             )}
             <AlertDialogCancel>{t.no}</AlertDialogCancel>
             <AlertDialogAction onClick={() => {
-              handleReset();
+              reset();
               setShowNewPhotoDialog(false);
             }}>
               {t.yes}

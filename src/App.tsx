@@ -8,6 +8,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { AppHeader } from "@/components/AppHeader";
 import { AuthProvider } from "@/hooks/useAuth";
+import { ResizerProvider } from "@/hooks/useResizerState";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import InspirationAds from "./pages/InspirationAds";
@@ -39,6 +40,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
+            <ResizerProvider>
             <Routes>
               <Route path="/auth" element={<Auth />} />
               <Route path="/privacy" element={<PrivacyPolicy />} />
@@ -48,6 +50,7 @@ const App = () => (
               <Route path="/settings" element={<AppLayout><Settings /></AppLayout>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
+            </ResizerProvider>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
