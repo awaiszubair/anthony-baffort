@@ -107,6 +107,7 @@ const translations = {
     adUnsaved: "Advertentie verwijderd uit opgeslagen",
     downloadAd: "Afbeelding downloaden",
     visitPage: "Pagina bezoeken",
+    loginToSave: "Log in om advertenties op te slaan",
   },
   fr: {
     title: "Image & Video Resizer",
@@ -207,6 +208,7 @@ const translations = {
     adUnsaved: "Publicité retirée des enregistrements",
     downloadAd: "Télécharger l'image",
     visitPage: "Visiter la page",
+    loginToSave: "Connectez-vous pour enregistrer des publicités",
   },
   en: {
     title: "Image & Video Resizer",
@@ -307,6 +309,7 @@ const translations = {
     adUnsaved: "Ad removed from saved",
     downloadAd: "Download image",
     visitPage: "Visit page",
+    loginToSave: "Log in to save ads",
   },
 } as const;
 
