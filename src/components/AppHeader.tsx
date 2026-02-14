@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useDarkMode } from "@/hooks/use-dark-mode";
 import { Button } from "@/components/ui/button";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useI18n } from "@/lib/i18n";
 import logoBlack from "@/assets/logo-landscape-black.svg";
 import logoWhite from "@/assets/logo-landscape-white.svg";
 
@@ -11,6 +12,7 @@ export function AppHeader() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { isDark, toggle: toggleDark } = useDarkMode();
+  const { t } = useI18n();
 
   return (
     <header className="h-14 border-b border-border bg-card flex items-center justify-between px-4">
@@ -31,13 +33,13 @@ export function AppHeader() {
             </span>
             <Button variant="ghost" size="sm" onClick={signOut} className="gap-2 text-muted-foreground">
               <LogOut className="h-4 w-4" />
-              <span className="hidden sm:inline">Uitloggen</span>
+              <span className="hidden sm:inline">{t.logout}</span>
             </Button>
           </>
         ) : (
           <Button variant="outline" size="sm" onClick={() => navigate("/auth")} className="gap-2">
             <LogIn className="h-4 w-4" />
-            Inloggen
+            {t.login}
           </Button>
         )}
       </div>

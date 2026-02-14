@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import { useBrandSettings } from "@/hooks/useBrandSettings";
 import { useTrackedBrands } from "@/hooks/useTrackedBrands";
+import { useI18n } from "@/lib/i18n";
 import {
   Select,
   SelectContent,
@@ -26,6 +27,7 @@ const Settings = () => {
   const [newTrackedName, setNewTrackedName] = useState("");
   const [newTrackedPageId, setNewTrackedPageId] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { t } = useI18n();
 
   const handleAddTrackedBrand = () => {
     const trimmed = newTrackedName.trim();
@@ -33,22 +35,22 @@ const Settings = () => {
     addTrackedBrand(trimmed, newTrackedPageId.trim());
     setNewTrackedName("");
     setNewTrackedPageId("");
-    toast({ title: "Merk toegevoegd aan inspiratie" });
+    toast({ title: t.brandAdded });
   };
 
   const handleLogoUpload = (file: File) => {
     if (!file.type.startsWith("image/")) {
-      toast({ title: "Alleen afbeeldingen", variant: "destructive" });
+      toast({ title: t.imagesOnly, variant: "destructive" });
       return;
     }
     if (file.size > 2 * 1024 * 1024) {
-      toast({ title: "Maximaal 2MB", variant: "destructive" });
+      toast({ title: t.maxFileSize, variant: "destructive" });
       return;
     }
     const reader = new FileReader();
     reader.onload = () => {
       updateBrand({ logoUrl: reader.result as string });
-      toast({ title: "Logo opgeslagen" });
+      toast({ title: t.logoSaved });
     };
     reader.readAsDataURL(file);
   };
@@ -56,18 +58,14 @@ const Settings = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8 max-w-2xl">
-        <h1 className="text-3xl font-bold text-foreground mb-2">Settings</h1>
-        <p className="text-muted-foreground mb-8">
-          Stel je standaard logo en lettertype in voor de Resizer, en beheer merken voor Inspiration Ads.
-        </p>
+        <h1 className="text-3xl font-bold text-foreground mb-2">{t.settingsTitle}</h1>
+        <p className="text-muted-foreground mb-8">{t.settingsDescription}</p>
 
         <div className="space-y-6">
           {/* Default logo */}
           <div className="rounded-lg border border-border bg-card p-6">
-            <h2 className="text-lg font-semibold text-foreground mb-1">Standaard logo</h2>
-            <p className="text-xs text-muted-foreground mb-4">
-              Dit logo wordt automatisch toegepast wanneer je een afbeelding uploadt in de Resizer.
-            </p>
+            <h2 className="text-lg font-semibold text-foreground mb-1">{t.defaultLogo}</h2>
+            <p className="text-xs text-muted-foreground mb-4">{t.defaultLogoDescription}</p>
             {brand.logoUrl ? (
               <div className="flex items-start gap-4">
                 <div className="relative w-24 h-24 rounded-lg border border-border bg-background flex items-center justify-center overflow-hidden">
@@ -75,14 +73,14 @@ const Settings = () => {
                 </div>
                 <div className="flex flex-col gap-2">
                   <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} className="gap-2">
-                    <Upload className="h-4 w-4" /> Vervangen
+                    <Upload className="h-4 w-4" /> {t.replaceLogo}
                   </Button>
                   <Button
                     variant="ghost" size="sm"
-                    onClick={() => { updateBrand({ logoUrl: null }); toast({ title: "Logo verwijderd" }); }}
+                    onClick={() => { updateBrand({ logoUrl: null }); toast({ title: t.logoRemoved }); }}
                     className="gap-2 text-destructive hover:text-destructive"
                   >
-                    <X className="h-4 w-4" /> Verwijderen
+                    <X className="h-4 w-4" /> {t.removeBrandLogo}
                   </Button>
                 </div>
               </div>
@@ -92,8 +90,8 @@ const Settings = () => {
                 className="w-full border-2 border-dashed border-border rounded-lg p-8 flex flex-col items-center gap-2 text-muted-foreground hover:border-primary hover:text-primary transition-colors"
               >
                 <Upload className="h-8 w-8" />
-                <span className="text-sm font-medium">Upload je logo</span>
-                <span className="text-xs">PNG, JPG of SVG — max 2MB</span>
+                <span className="text-sm font-medium">{t.uploadLogo}</span>
+                <span className="text-xs">{t.uploadLogoHint}</span>
               </button>
             )}
             <input
@@ -111,13 +109,11 @@ const Settings = () => {
 
           {/* Default font */}
           <div className="rounded-lg border border-border bg-card p-6">
-            <h2 className="text-lg font-semibold text-foreground mb-1">Standaard lettertype</h2>
-            <p className="text-xs text-muted-foreground mb-4">
-              Dit lettertype wordt automatisch ingesteld voor tekst-overlays in de Resizer.
-            </p>
-            <Select value={brand.fontFamily} onValueChange={(font) => { updateBrand({ fontFamily: font }); toast({ title: "Lettertype opgeslagen" }); }}>
+            <h2 className="text-lg font-semibold text-foreground mb-1">{t.defaultFont}</h2>
+            <p className="text-xs text-muted-foreground mb-4">{t.defaultFontDescription}</p>
+            <Select value={brand.fontFamily} onValueChange={(font) => { updateBrand({ fontFamily: font }); toast({ title: t.fontSaved }); }}>
               <SelectTrigger className="w-full max-w-xs bg-background">
-                <SelectValue placeholder="Kies een lettertype" />
+                <SelectValue placeholder={t.chooseFont} />
               </SelectTrigger>
               <SelectContent className="bg-card border-border z-50">
                 {GOOGLE_FONTS.map((font) => (
@@ -128,17 +124,15 @@ const Settings = () => {
               </SelectContent>
             </Select>
             <div className="mt-4 rounded-lg border border-border bg-background p-4" style={{ fontFamily: brand.fontFamily }}>
-              <p className="text-lg font-bold text-foreground">Preview tekst</p>
-              <p className="text-sm text-muted-foreground">Het snelle bruine vos springt over de luie hond.</p>
+              <p className="text-lg font-bold text-foreground">{t.fontPreview}</p>
+              <p className="text-sm text-muted-foreground">{t.fontPreviewText}</p>
             </div>
           </div>
 
           {/* Tracked brands for Inspiration Ads */}
           <div className="rounded-lg border border-border bg-card p-6">
-            <h2 className="text-lg font-semibold text-foreground mb-1">Inspiratie merken</h2>
-            <p className="text-xs text-muted-foreground mb-4">
-              Merken die je wilt volgen in Inspiration Ads. Je kunt ze daar ook ter plaatse toevoegen.
-            </p>
+            <h2 className="text-lg font-semibold text-foreground mb-1">{t.inspirationBrands}</h2>
+            <p className="text-xs text-muted-foreground mb-4">{t.inspirationBrandsDescription}</p>
 
             {trackedBrands.length > 0 && (
               <div className="space-y-2 mb-4">
@@ -152,7 +146,7 @@ const Settings = () => {
                       variant="ghost"
                       size="icon"
                       className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
-                      onClick={() => { removeTrackedBrand(b.id); toast({ title: "Merk verwijderd" }); }}
+                      onClick={() => { removeTrackedBrand(b.id); toast({ title: t.brandRemoved }); }}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
@@ -164,7 +158,7 @@ const Settings = () => {
             <div className="flex gap-2 items-end">
               <div className="flex-1">
                 <Input
-                  placeholder="Merknaam"
+                  placeholder={t.brandName}
                   value={newTrackedName}
                   onChange={(e) => setNewTrackedName(e.target.value)}
                   className="text-sm"
@@ -182,7 +176,7 @@ const Settings = () => {
               </div>
               <Button onClick={handleAddTrackedBrand} disabled={!newTrackedName.trim()} size="sm" className="gap-1.5">
                 <Plus className="h-3.5 w-3.5" />
-                Toevoegen
+                {t.add}
               </Button>
             </div>
           </div>
