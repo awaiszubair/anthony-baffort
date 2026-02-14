@@ -1,6 +1,7 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { RotateCcw, Shield, ShieldOff, Download, Loader2, Moon, Sun, Info, Languages } from "lucide-react";
 import { useDarkMode } from "@/hooks/use-dark-mode";
+import { useBrandSettings } from "@/hooks/useBrandSettings";
 import DropZone from "@/components/DropZone";
 import FormatOutput from "@/components/FormatOutput";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -22,6 +23,7 @@ import { FORMATS, detectMediaType, downloadBlob, renderImageToCanvas, renderVide
 
 const Index = () => {
   const { isDark, toggle: toggleDark } = useDarkMode();
+  const { brand, hasBrand } = useBrandSettings();
   const [file, setFile] = useState<File | null>(null);
   const [mediaType, setMediaType] = useState<MediaType>("image");
   const [showSafeZones, setShowSafeZones] = useState(true);
@@ -30,7 +32,33 @@ const Index = () => {
   const [showTranslateBar, setShowTranslateBar] = useState(false);
   const [logo, setLogo] = useState<LogoConfig | null>(null);
   const [textOverlay, setTextOverlay] = useState<TextConfig | null>(null);
+  const [brandDefaultsApplied, setBrandDefaultsApplied] = useState(false);
   const { t } = useI18n();
+
+  // Apply brand defaults from settings on first file upload
+  useEffect(() => {
+    if (file && hasBrand && !brandDefaultsApplied) {
+      if (brand.logoUrl && !logo) {
+        setLogo({
+          src: brand.logoUrl,
+          position: "bottom-right",
+          scale: 0.15,
+          opacity: 1,
+        });
+      }
+      if (brand.fontFamily && !textOverlay) {
+        setTextOverlay({
+          text: "",
+          font: `'${brand.fontFamily}', sans-serif`,
+          position: "bottom-center",
+          size: 0.05,
+          color: "#FFFFFF",
+          opacity: 1,
+        });
+      }
+      setBrandDefaultsApplied(true);
+    }
+  }, [file, hasBrand, brandDefaultsApplied]);
 
   const mediaSrc = useMemo(() => (file ? URL.createObjectURL(file) : ""), [file]);
 
@@ -59,6 +87,7 @@ const Index = () => {
 
   const handleReset = () => {
     setFile(null);
+    setBrandDefaultsApplied(false);
   };
 
   const handleDownloadAll = async () => {
