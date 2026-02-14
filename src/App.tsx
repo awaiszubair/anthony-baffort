@@ -18,15 +18,13 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const ProtectedLayout = ({ children }: { children: React.ReactNode }) => (
-  <ProtectedRoute>
-    <SidebarProvider>
-      <div className="flex w-full min-h-screen">
-        <AppSidebar />
-        <main className="flex-1">{children}</main>
-      </div>
-    </SidebarProvider>
-  </ProtectedRoute>
+const AppLayout = ({ children }: { children: React.ReactNode }) => (
+  <SidebarProvider>
+    <div className="flex w-full min-h-screen">
+      <AppSidebar />
+      <main className="flex-1">{children}</main>
+    </div>
+  </SidebarProvider>
 );
 
 const App = () => (
@@ -41,9 +39,9 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/terms" element={<TermsOfUse />} />
-              <Route path="/" element={<ProtectedLayout><Index /></ProtectedLayout>} />
-              <Route path="/inspiration" element={<ProtectedLayout><InspirationAds /></ProtectedLayout>} />
-              <Route path="/settings" element={<ProtectedLayout><Settings /></ProtectedLayout>} />
+              <Route path="/" element={<AppLayout><Index /></AppLayout>} />
+              <Route path="/inspiration" element={<AppLayout><InspirationAds /></AppLayout>} />
+              <Route path="/settings" element={<AppLayout><ProtectedRoute><Settings /></ProtectedRoute></AppLayout>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AuthProvider>
