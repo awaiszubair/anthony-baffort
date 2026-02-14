@@ -1,7 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
 import { RotateCcw, Shield, ShieldOff, Download, Loader2, Moon, Sun, Info, Languages } from "lucide-react";
-import logoLandscapeBlack from "@/assets/logo-landscape-black.svg";
-import logoLandscapeWhite from "@/assets/logo-landscape-white.svg";
 import { useDarkMode } from "@/hooks/use-dark-mode";
 import DropZone from "@/components/DropZone";
 import FormatOutput from "@/components/FormatOutput";
@@ -104,14 +102,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background" onDragOver={handleGlobalDrag} onDrop={handleGlobalDrop}>
-      <header className="border-b border-border bg-card">
-        <div className="container mx-auto flex items-center justify-between px-4 py-5">
-          <div>
-            <img src={isDark ? logoLandscapeWhite : logoLandscapeBlack} alt="Landing Partners" className="h-7" />
-            <p className="mt-1 text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-light">
-              {t.subtitle}
-            </p>
-          </div>
+      <div className="container mx-auto flex items-center justify-end px-4 py-3">
           <div className="flex items-center gap-2">
             <button onClick={toggleDark} className="p-1.5 rounded hover:bg-muted transition-colors cursor-pointer" aria-label="Toggle dark mode">
               {isDark ? <Sun className="h-4 w-4 text-foreground" /> : <Moon className="h-4 w-4 text-foreground" />}
@@ -124,8 +115,7 @@ const Index = () => {
               </Button>
             )}
           </div>
-        </div>
-      </header>
+      </div>
 
       <main className="container mx-auto px-4 py-10">
         {!file ? (
