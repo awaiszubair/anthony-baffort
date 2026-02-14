@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
-import { Loader2, AlertCircle, ExternalLink, Plus, X, Eye, Search } from "lucide-react";
+import { Loader2, AlertCircle, ExternalLink, Plus, X, Eye, Search, Bookmark, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useTrackedBrands, type TrackedBrand } from "@/hooks/useTrackedBrands";
+import { useSavedAds } from "@/hooks/useSavedAds";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n";
 
@@ -77,6 +79,8 @@ const MockAdImage = ({ gradient, name }: { gradient: string; name: string }) => 
 
 const InspirationAds = () => {
   const { brands, addBrand, removeBrand } = useTrackedBrands();
+  const { isSaved, toggleSave } = useSavedAds();
+  const { user } = useAuth();
   const [allAds, setAllAds] = useState<MetaAd[]>([]);
   const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -331,11 +335,34 @@ const InspirationAds = () => {
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-muted-foreground"><Eye className="h-8 w-8" /></div>
                   )}
-                  {ad.snapshot_url && (
-                    <a href={ad.snapshot_url} target="_blank" rel="noopener noreferrer" className="absolute top-2 right-2 p-1.5 rounded-md bg-card/80 hover:bg-card text-foreground transition-colors opacity-0 group-hover:opacity-100">
-                      <ExternalLink className="h-4 w-4" />
-                    </a>
-                  )}
+                  <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {user && (
+                      <button
+                        onClick={() => {
+                          toggleSave(ad).then((saved) => {
+                            toast({ title: saved ? t.adSaved : t.adUnsaved });
+                          });
+                        }}
+                        className="p-1.5 rounded-md bg-card/80 hover:bg-card text-foreground transition-colors"
+                        title={isSaved(ad.id) ? t.adUnsave : t.adSave}
+                      >
+                        <Bookmark className={`h-4 w-4 ${isSaved(ad.id) ? "fill-current" : ""}`} />
+                      </button>
+                    )}
+                    {(ad.image_url && !ad.image_url.startsWith("gradient:")) && (
+                      <a href={ad.image_url} download target="_blank" rel="noopener noreferrer"
+                        className="p-1.5 rounded-md bg-card/80 hover:bg-card text-foreground transition-colors"
+                        title={t.downloadAd}>
+                        <Download className="h-4 w-4" />
+                      </a>
+                    )}
+                    {ad.snapshot_url && (
+                      <a href={ad.snapshot_url} target="_blank" rel="noopener noreferrer"
+                        className="p-1.5 rounded-md bg-card/80 hover:bg-card text-foreground transition-colors">
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
+                    )}
+                  </div>
                 </div>
                 <div className="p-4">
                   <h3 className="font-medium text-foreground mb-1 line-clamp-2">{ad.page_name || ad.name}</h3>
