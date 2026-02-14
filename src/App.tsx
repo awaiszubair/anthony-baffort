@@ -45,7 +45,7 @@ const App = () => (
               <Route path="/terms" element={<TermsOfUse />} />
               <Route path="/" element={<AppLayout><Index /></AppLayout>} />
               <Route path="/inspiration" element={<AppLayout><InspirationAds /></AppLayout>} />
-              <Route path="/settings" element={<AppLayout><ProtectedRoute><Settings /></ProtectedRoute></AppLayout>} />
+              <Route path="/settings" element={<AppLayout><Settings /></AppLayout>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AuthProvider>
