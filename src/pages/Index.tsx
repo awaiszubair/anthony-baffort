@@ -134,7 +134,13 @@ const Index = () => {
           </div>
       </div>
 
-      <main className="container mx-auto px-4 py-10">
+      <main className="container mx-auto px-4 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-foreground mb-2">Resizer</h1>
+          <p className="text-muted-foreground">
+            Upload een afbeelding of video en resize naar alle advertentieformaten.
+          </p>
+        </div>
         {!file ? (
           <div className="mx-auto max-w-xl">
             <div className="mb-6 text-sm text-muted-foreground space-y-2">
