@@ -119,8 +119,15 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background" onDragOver={handleGlobalDrag} onDrop={handleGlobalDrop}>
-      <div className="container mx-auto flex items-center justify-end px-4 py-3">
-          <div className="flex items-center gap-2">
+      <main className="container mx-auto px-4 py-8">
+        <div className="mb-8 flex items-start justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Resizer</h1>
+            <p className="text-muted-foreground">
+              Upload een afbeelding of video en resize naar alle advertentieformaten.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 pt-1">
             <button onClick={toggleDark} className="p-1.5 rounded hover:bg-muted transition-colors cursor-pointer" aria-label="Toggle dark mode">
               {isDark ? <Sun className="h-4 w-4 text-foreground" /> : <Moon className="h-4 w-4 text-foreground" />}
             </button>
@@ -132,14 +139,6 @@ const Index = () => {
               </Button>
             )}
           </div>
-      </div>
-
-      <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Resizer</h1>
-          <p className="text-muted-foreground">
-            Upload een afbeelding of video en resize naar alle advertentieformaten.
-          </p>
         </div>
         {!file ? (
           <div className="mx-auto max-w-xl">
