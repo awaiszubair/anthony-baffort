@@ -42,7 +42,7 @@ export function useBrandSettings() {
     setBrandState(defaultBrand);
   }, []);
 
-  const hasBrand = brand.name.trim().length > 0;
+  const hasBrand = !!brand.logoUrl || brand.fontFamily !== "DM Sans";
 
   return { brand, updateBrand, clearBrand, hasBrand };
 }

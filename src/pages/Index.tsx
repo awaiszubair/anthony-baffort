@@ -37,7 +37,7 @@ const Index = () => {
 
   // Apply brand defaults from settings on first file upload
   useEffect(() => {
-    if (file && hasBrand && !brandDefaultsApplied) {
+    if (file && !brandDefaultsApplied) {
       if (brand.logoUrl && !logo) {
         setLogo({
           src: brand.logoUrl,
@@ -46,7 +46,7 @@ const Index = () => {
           opacity: 1,
         });
       }
-      if (brand.fontFamily && !textOverlay) {
+      if (brand.fontFamily && brand.fontFamily !== "DM Sans" && !textOverlay) {
         setTextOverlay({
           text: "",
           font: `'${brand.fontFamily}', sans-serif`,
@@ -58,7 +58,7 @@ const Index = () => {
       }
       setBrandDefaultsApplied(true);
     }
-  }, [file, hasBrand, brandDefaultsApplied]);
+  }, [file, brandDefaultsApplied]);
 
   const mediaSrc = useMemo(() => (file ? URL.createObjectURL(file) : ""), [file]);
 
