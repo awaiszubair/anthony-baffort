@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { I18nProvider } from "@/lib/i18n";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
+import { AppHeader } from "@/components/AppHeader";
 import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
@@ -22,7 +23,10 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => (
   <SidebarProvider>
     <div className="flex w-full min-h-screen">
       <AppSidebar />
-      <main className="flex-1">{children}</main>
+      <div className="flex-1 flex flex-col">
+        <AppHeader />
+        <main className="flex-1">{children}</main>
+      </div>
     </div>
   </SidebarProvider>
 );
