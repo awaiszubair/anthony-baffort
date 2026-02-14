@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Loader2, AlertCircle, ExternalLink, Plus, X, Eye } from "lucide-react";
+import { Loader2, AlertCircle, ExternalLink, Plus, X, Eye, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
@@ -15,9 +15,17 @@ interface MetaAd {
   snapshot_url?: string;
   image_url?: string;
   page_name?: string;
+  page_id?: string;
   platform?: string;
   created_at?: string;
   stopped_at?: string | null;
+}
+
+interface DiscoveredPage {
+  page_name: string;
+  page_id: string;
+  adCount: number;
+  platforms: string[];
 }
 
 const USE_MOCK = true;
@@ -42,11 +50,21 @@ function generateMockAds(brandName: string): MetaAd[] {
   ];
   return adTypes.map((ad, i) => ({
     id: `mock-${brandName}-${i}`, name: ad.name, text: ad.text, page_name: brandName,
+    page_id: `${1000000 + Math.floor(Math.random() * 9000000)}`,
     platform: platforms[i % platforms.length],
     created_at: new Date(Date.now() - i * 3 * 24 * 60 * 60 * 1000).toISOString(),
     stopped_at: i === 3 ? new Date().toISOString() : null,
     image_url: `gradient:${colors[i]}`,
   }));
+}
+
+function generateMockPages(brandName: string): DiscoveredPage[] {
+  const lower = brandName.toLowerCase();
+  return [
+    { page_name: brandName, page_id: "1234567890", adCount: 47, platforms: ["facebook", "instagram"] },
+    { page_name: `${brandName} ${lower === "nike" ? "Running" : "Official"}`, page_id: "9876543210", adCount: 12, platforms: ["facebook"] },
+    { page_name: `${brandName} ${lower === "nike" ? "Football" : "Store"}`, page_id: "5555555555", adCount: 8, platforms: ["instagram"] },
+  ];
 }
 
 const MockAdImage = ({ gradient, name }: { gradient: string; name: string }) => (
@@ -63,9 +81,11 @@ const InspirationAds = () => {
   const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Add brand flow
   const [showAddForm, setShowAddForm] = useState(false);
   const [newName, setNewName] = useState("");
-  const [newPageId, setNewPageId] = useState("");
+  const [searching, setSearching] = useState(false);
+  const [discoveredPages, setDiscoveredPages] = useState<DiscoveredPage[]>([]);
   const { t } = useI18n();
 
   const fetchAds = async (brand: TrackedBrand) => {
@@ -92,14 +112,65 @@ const InspirationAds = () => {
     }
   };
 
-  const handleAddBrand = () => {
+  const searchPages = async () => {
     const trimmed = newName.trim();
     if (!trimmed) return;
-    addBrand(trimmed, newPageId.trim());
-    setNewName("");
-    setNewPageId("");
-    setShowAddForm(false);
+    setSearching(true);
+    setDiscoveredPages([]);
+
+    if (USE_MOCK) {
+      await new Promise((r) => setTimeout(r, 800));
+      setDiscoveredPages(generateMockPages(trimmed));
+      setSearching(false);
+      return;
+    }
+
+    try {
+      const res = await supabase.functions.invoke("meta-ad-library", {
+        body: { search_query: trimmed, limit: 50 },
+      });
+      if (res.error) throw new Error(res.error.message);
+      if (res.data?.error) throw new Error(res.data.error);
+
+      // Extract unique pages from ad results
+      const pageMap = new Map<string, DiscoveredPage>();
+      for (const ad of res.data?.ads || []) {
+        if (!ad.page_id || !ad.page_name) continue;
+        const existing = pageMap.get(ad.page_id);
+        if (existing) {
+          existing.adCount++;
+          if (ad.platform) {
+            for (const p of ad.platform.split(", ")) {
+              if (!existing.platforms.includes(p)) existing.platforms.push(p);
+            }
+          }
+        } else {
+          pageMap.set(ad.page_id, {
+            page_name: ad.page_name,
+            page_id: ad.page_id,
+            adCount: 1,
+            platforms: ad.platform ? ad.platform.split(", ") : [],
+          });
+        }
+      }
+      setDiscoveredPages(Array.from(pageMap.values()).sort((a, b) => b.adCount - a.adCount));
+    } catch (err) {
+      toast({ title: t.translateError, variant: "destructive" });
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const selectPage = (page: DiscoveredPage) => {
+    addBrand(page.page_name, page.page_id);
     toast({ title: t.brandAdded });
+    resetAddForm();
+  };
+
+  const resetAddForm = () => {
+    setShowAddForm(false);
+    setNewName("");
+    setDiscoveredPages([]);
   };
 
   return (
@@ -123,19 +194,75 @@ const InspirationAds = () => {
               </Button>
             </div>
           ))}
-          {showAddForm ? (
-            <div className="flex items-center gap-2">
-              <Input placeholder={t.brandName} value={newName} onChange={(e) => setNewName(e.target.value)} className="h-8 w-36 text-sm" autoFocus onKeyDown={(e) => e.key === "Enter" && handleAddBrand()} />
-              <Input placeholder="Page ID" value={newPageId} onChange={(e) => setNewPageId(e.target.value)} className="h-8 w-28 text-sm" onKeyDown={(e) => e.key === "Enter" && handleAddBrand()} />
-              <Button size="sm" onClick={handleAddBrand} disabled={!newName.trim()}><Plus className="h-3.5 w-3.5" /></Button>
-              <Button variant="ghost" size="sm" onClick={() => { setShowAddForm(false); setNewName(""); setNewPageId(""); }}><X className="h-3.5 w-3.5" /></Button>
-            </div>
-          ) : (
+          {!showAddForm && (
             <Button variant="outline" size="sm" onClick={() => setShowAddForm(true)} className="gap-1.5">
               <Plus className="h-3.5 w-3.5" /> {t.addBrand}
             </Button>
           )}
         </div>
+
+        {/* Add brand flow */}
+        {showAddForm && (
+          <div className="mb-8 rounded-lg border border-border bg-card p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-foreground">{t.addBrand}</h2>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={resetAddForm}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Step 1: Search */}
+            <div className="flex gap-2 mb-4">
+              <Input
+                placeholder={t.brandName}
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                className="text-sm max-w-xs"
+                autoFocus
+                onKeyDown={(e) => e.key === "Enter" && searchPages()}
+              />
+              <Button size="sm" onClick={searchPages} disabled={!newName.trim() || searching} className="gap-1.5">
+                {searching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />}
+                {t.searchPages}
+              </Button>
+            </div>
+
+            {/* Step 2: Select page */}
+            {discoveredPages.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground mb-2">{t.selectPage}</p>
+                {discoveredPages.map((page) => (
+                  <button
+                    key={page.page_id}
+                    onClick={() => selectPage(page)}
+                    className="w-full text-left rounded-lg border border-border bg-background px-4 py-3 hover:border-primary hover:bg-primary/5 transition-colors"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-foreground">{page.page_name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {page.adCount} {t.adsFound} · {page.platforms.map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(", ")}
+                        </p>
+                      </div>
+                      <span className="text-xs text-muted-foreground font-mono">{page.page_id}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {searching && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                {t.searchingPages}
+              </div>
+            )}
+
+            {!searching && discoveredPages.length === 0 && newName.trim() && (
+              <p className="text-xs text-muted-foreground">{t.searchPagesHint}</p>
+            )}
+          </div>
+        )}
 
         {brands.length === 0 && !showAddForm && (
           <div className="mb-8 rounded-lg border border-border bg-card p-8 text-center">
