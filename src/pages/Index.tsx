@@ -1,11 +1,9 @@
 import { useState, useCallback, useEffect } from "react";
-import { RotateCcw, Shield, ShieldOff, Download, Loader2, Moon, Sun, Info, Languages } from "lucide-react";
-import { useDarkMode } from "@/hooks/use-dark-mode";
+import { RotateCcw, Shield, ShieldOff, Download, Loader2, Info, Languages } from "lucide-react";
 import { useBrandSettings } from "@/hooks/useBrandSettings";
 import { useResizerState } from "@/hooks/useResizerState";
 import DropZone from "@/components/DropZone";
 import FormatOutput from "@/components/FormatOutput";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
 import LogoEditor from "@/components/LogoEditor";
 import TextEditor from "@/components/TextEditor";
 import TranslateBar from "@/components/TranslateBar";
@@ -23,7 +21,6 @@ import { useI18n } from "@/lib/i18n";
 import { FORMATS, downloadBlob, renderImageToCanvas, renderVideoToBlob } from "@/lib/mediaUtils";
 
 const Index = () => {
-  const { isDark, toggle: toggleDark } = useDarkMode();
   const { brand } = useBrandSettings();
   const {
     file, mediaType, mediaSrc, showSafeZones, showTranslateBar,
@@ -127,18 +124,14 @@ const Index = () => {
               Upload een afbeelding of video en resize naar alle advertentieformaten.
             </p>
           </div>
-          <div className="flex items-center gap-2 pt-1">
-            <button onClick={toggleDark} className="p-1.5 rounded hover:bg-muted transition-colors cursor-pointer" aria-label="Toggle dark mode">
-              {isDark ? <Sun className="h-4 w-4 text-foreground" /> : <Moon className="h-4 w-4 text-foreground" />}
-            </button>
-            <LanguageSwitcher />
-            {file && (
+          {file && (
+            <div className="flex items-center gap-2 pt-1">
               <Button variant="outline" size="sm" onClick={reset} className="gap-1.5">
                 <RotateCcw className="h-3.5 w-3.5" />
                 {t.reset}
               </Button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
         {!file ? (
           <div className="mx-auto max-w-xl">
