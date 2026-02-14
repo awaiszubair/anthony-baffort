@@ -1,6 +1,6 @@
-import { Lightbulb, BarChart3, Settings, LogOut } from "lucide-react";
+import { Lightbulb, BarChart3, Settings, LogOut, LogIn } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import {
   Sidebar,
@@ -24,11 +24,10 @@ const items = [
 export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
+  const navigate = useNavigate();
   const { signOut, user } = useAuth();
   const currentPath = location.pathname;
   const collapsed = state === "collapsed";
-
-  const isActive = (path: string) => currentPath === path;
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
@@ -60,13 +59,23 @@ export function AppSidebar() {
       <div className="mt-auto p-2 border-t border-sidebar-border">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              onClick={signOut}
-              className="hover:bg-sidebar-accent/50 text-muted-foreground"
-            >
-              <LogOut className="h-4 w-4" />
-              {!collapsed && <span>Uitloggen</span>}
-            </SidebarMenuButton>
+            {user ? (
+              <SidebarMenuButton
+                onClick={signOut}
+                className="hover:bg-sidebar-accent/50 text-muted-foreground"
+              >
+                <LogOut className="h-4 w-4" />
+                {!collapsed && <span>Uitloggen</span>}
+              </SidebarMenuButton>
+            ) : (
+              <SidebarMenuButton
+                onClick={() => navigate("/auth")}
+                className="hover:bg-sidebar-accent/50 text-muted-foreground"
+              >
+                <LogIn className="h-4 w-4" />
+                {!collapsed && <span>Inloggen</span>}
+              </SidebarMenuButton>
+            )}
           </SidebarMenuItem>
         </SidebarMenu>
       </div>
