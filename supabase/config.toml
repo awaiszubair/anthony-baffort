@@ -1,1 +1,4 @@
 project_id = "dxvnkoctohnytahtwhit"
+
+[functions.kling-video]
+verify_jwt = false
