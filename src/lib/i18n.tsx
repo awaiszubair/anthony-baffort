@@ -120,6 +120,8 @@ const translations = {
     videoGenProcessing: "Video wordt gegenereerd…",
     videoGenDone: "Video is klaar!",
     videoGenError: "Video genereren mislukt",
+    videoGenPageDescription: "Upload een afbeelding en genereer er een korte AI-video van.",
+    videoGenUpload: "Sleep je afbeelding hierheen of klik om te uploaden",
   },
   fr: {
     title: "Image & Video Resizer",
@@ -233,6 +235,8 @@ const translations = {
     videoGenProcessing: "Génération en cours…",
     videoGenDone: "Vidéo prête !",
     videoGenError: "La génération vidéo a échoué",
+    videoGenPageDescription: "Téléchargez une image et générez une courte vidéo AI.",
+    videoGenUpload: "Glissez votre image ici ou cliquez pour télécharger",
   },
   en: {
     title: "Image & Video Resizer",
@@ -346,6 +350,8 @@ const translations = {
     videoGenProcessing: "Generating video…",
     videoGenDone: "Video is ready!",
     videoGenError: "Video generation failed",
+    videoGenPageDescription: "Upload an image and generate a short AI video from it.",
+    videoGenUpload: "Drag your image here or click to upload",
   },
 } as const;
 

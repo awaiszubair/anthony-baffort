@@ -1,4 +1,4 @@
-import { Lightbulb, BarChart3, Settings, LogOut, LogIn, Bookmark } from "lucide-react";
+import { Lightbulb, BarChart3, Settings, LogOut, LogIn, Bookmark, Video } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -17,6 +17,7 @@ import {
 
 const items = [
   { title: "Resizer", url: "/", icon: BarChart3 },
+  { title: "Video Generator", url: "/video", icon: Video },
   { title: "Inspiration Ads", url: "/inspiration", icon: Lightbulb },
   { title: "Saved Ads", url: "/saved", icon: Bookmark },
   { title: "Settings", url: "/settings", icon: Settings },
