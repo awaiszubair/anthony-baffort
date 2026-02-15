@@ -80,6 +80,7 @@ export type Database = {
           page_name: string | null
           platform: string | null
           snapshot_url: string | null
+          stored_media_url: string | null
           user_id: string
         }
         Insert: {
@@ -93,6 +94,7 @@ export type Database = {
           page_name?: string | null
           platform?: string | null
           snapshot_url?: string | null
+          stored_media_url?: string | null
           user_id: string
         }
         Update: {
@@ -106,6 +108,7 @@ export type Database = {
           page_name?: string | null
           platform?: string | null
           snapshot_url?: string | null
+          stored_media_url?: string | null
           user_id?: string
         }
         Relationships: []

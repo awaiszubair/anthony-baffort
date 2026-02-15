@@ -28,6 +28,18 @@ export function useSavedAds() {
 
   const isSaved = useCallback((adId: string) => savedAdIds.has(adId), [savedAdIds]);
 
+  const copyMedia = async (sourceUrl: string, adId: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      await supabase.functions.invoke("copy-ad-media", {
+        body: { source_url: sourceUrl, ad_id: adId },
+      });
+    } catch {
+      // Silent fail — media copy is best-effort
+    }
+  };
+
   const toggleSave = useCallback(async (ad: {
     id: string;
     name?: string;
@@ -41,7 +53,21 @@ export function useSavedAds() {
     if (!user) return false;
 
     if (savedAdIds.has(ad.id)) {
-      // Unsave
+      // Unsave — also delete stored media
+      const { data: existing } = await supabase
+        .from("saved_ads")
+        .select("stored_media_url")
+        .eq("user_id", user.id)
+        .eq("ad_id", ad.id)
+        .single();
+
+      if (existing?.stored_media_url) {
+        const path = existing.stored_media_url.split("/saved-ad-media/")[1];
+        if (path) {
+          await supabase.storage.from("saved-ad-media").remove([path]);
+        }
+      }
+
       await supabase.from("saved_ads").delete().eq("user_id", user.id).eq("ad_id", ad.id);
       setSavedAdIds((prev) => { const next = new Set(prev); next.delete(ad.id); return next; });
       return false;
@@ -59,6 +85,13 @@ export function useSavedAds() {
         snapshot_url: ad.snapshot_url || null,
       });
       setSavedAdIds((prev) => new Set(prev).add(ad.id));
+
+      // Copy media in background (images/videos)
+      const mediaUrl = ad.image_url || ad.snapshot_url;
+      if (mediaUrl && !mediaUrl.startsWith("gradient:")) {
+        copyMedia(mediaUrl, ad.id);
+      }
+
       return true;
     }
   }, [user, savedAdIds]);

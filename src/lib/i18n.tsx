@@ -108,6 +108,11 @@ const translations = {
     downloadAd: "Afbeelding downloaden",
     visitPage: "Pagina bezoeken",
     loginToSave: "Log in om advertenties op te slaan",
+    savedAdsTitle: "Opgeslagen Ads",
+    savedAdsDescription: "Alle advertenties die je hebt opgeslagen, met een lokale kopie van de media.",
+    noSavedAds: "Nog geen opgeslagen advertenties",
+    noSavedAdsDescription: "Sla advertenties op vanuit Inspiration Ads om ze hier terug te vinden.",
+    mediaCopied: "Kopie opgeslagen",
   },
   fr: {
     title: "Image & Video Resizer",
@@ -209,6 +214,11 @@ const translations = {
     downloadAd: "Télécharger l'image",
     visitPage: "Visiter la page",
     loginToSave: "Connectez-vous pour enregistrer des publicités",
+    savedAdsTitle: "Publicités enregistrées",
+    savedAdsDescription: "Toutes les publicités que vous avez enregistrées, avec une copie locale du média.",
+    noSavedAds: "Aucune publicité enregistrée",
+    noSavedAdsDescription: "Enregistrez des publicités depuis Inspiration Ads pour les retrouver ici.",
+    mediaCopied: "Copie enregistrée",
   },
   en: {
     title: "Image & Video Resizer",
@@ -310,6 +320,11 @@ const translations = {
     downloadAd: "Download image",
     visitPage: "Visit page",
     loginToSave: "Log in to save ads",
+    savedAdsTitle: "Saved Ads",
+    savedAdsDescription: "All ads you've saved, with a local copy of the media.",
+    noSavedAds: "No saved ads yet",
+    noSavedAdsDescription: "Save ads from Inspiration Ads to find them here.",
+    mediaCopied: "Copy saved",
   },
 } as const;
 
