@@ -3,7 +3,7 @@ import { Download, Loader2, Sparkles, RotateCcw, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import CropEditor from "@/components/CropEditor";
-import VideoGenerator from "@/components/VideoGenerator";
+
 import { useI18n } from "@/lib/i18n";
 import type { LogoConfig } from "@/components/LogoEditor";
 import type { TextConfig } from "@/components/TextEditor";
@@ -426,21 +426,6 @@ const FormatOutput = ({ mediaSrc, mediaType, format, originalName, showSafeZones
         onZoomChange={handleZoomChange}
         textOverlay={textOverlay}
       />
-      {/* Video generator for story (9:16) image formats */}
-      {mediaType === "image" && format.id === "story" && (
-        <VideoGenerator
-          getImageBase64={async () => {
-            const blob = await exportFormat(activeSrc, mediaType, format, offsetX, offsetY, expandedSrc ? 1 : zoom, logo, textOverlay);
-            return new Promise<string>((resolve, reject) => {
-              const reader = new FileReader();
-              reader.onload = () => resolve(reader.result as string);
-              reader.onerror = reject;
-              reader.readAsDataURL(blob);
-            });
-          }}
-          originalName={originalName}
-        />
-      )}
     </div>
   );
 };
