@@ -12,6 +12,7 @@ import { ResizerProvider } from "@/hooks/useResizerState";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import InspirationAds from "./pages/InspirationAds";
+import SavedAds from "./pages/SavedAds";
 import Settings from "./pages/Settings";
 import Auth from "./pages/Auth";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
@@ -47,6 +48,7 @@ const App = () => (
               <Route path="/terms" element={<TermsOfUse />} />
               <Route path="/" element={<AppLayout><Index /></AppLayout>} />
               <Route path="/inspiration" element={<AppLayout><InspirationAds /></AppLayout>} />
+              <Route path="/saved" element={<AppLayout><SavedAds /></AppLayout>} />
               <Route path="/settings" element={<AppLayout><Settings /></AppLayout>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
