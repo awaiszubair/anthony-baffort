@@ -21,6 +21,7 @@ interface MetaAd {
   platform?: string;
   created_at?: string;
   stopped_at?: string | null;
+  impressions?: { lower_bound?: number; upper_bound?: number } | null;
 }
 
 interface DiscoveredPage {
@@ -57,6 +58,7 @@ function generateMockAds(brandName: string): MetaAd[] {
     created_at: new Date(Date.now() - i * 3 * 24 * 60 * 60 * 1000).toISOString(),
     stopped_at: i === 3 ? new Date().toISOString() : null,
     image_url: `gradient:${colors[i]}`,
+    impressions: { lower_bound: (i + 1) * 1200, upper_bound: (i + 1) * 3500 },
   }));
 }
 
@@ -380,14 +382,21 @@ const InspirationAds = () => {
                 <div className="p-4">
                   <h3 className="font-medium text-foreground mb-1 line-clamp-2">{ad.page_name || ad.name}</h3>
                   {ad.text && <p className="text-sm text-muted-foreground mb-3 line-clamp-3">{ad.text}</p>}
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    {ad.platform && <span className="capitalize px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{ad.platform}</span>}
-                    <div className="flex items-center gap-2">
-                      {ad.created_at && <span>{new Date(ad.created_at).toLocaleDateString()}</span>}
+                  <div className="flex flex-col gap-1.5 text-xs text-muted-foreground">
+                    <div className="flex items-center justify-between">
+                      {ad.platform && <span className="capitalize px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{ad.platform}</span>}
                       {!ad.stopped_at ? (
                         <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-medium">{t.active}</span>
                       ) : (
                         <span className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">{t.stopped}</span>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between">
+                      {ad.created_at && (
+                        <span>{t.activeSince} {new Date(ad.created_at).toLocaleDateString()}</span>
+                      )}
+                      {ad.impressions && ad.impressions.lower_bound != null && (
+                        <span>{t.reach}: {ad.impressions.lower_bound.toLocaleString()}–{(ad.impressions.upper_bound ?? ad.impressions.lower_bound).toLocaleString()}</span>
                       )}
                     </div>
                   </div>
