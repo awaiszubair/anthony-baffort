@@ -50,6 +50,7 @@ serve(async (req: Request) => {
       "page_id",
       "page_name",
       "publisher_platforms",
+      "impressions",
       "languages",
     ].join(","));
 
@@ -95,6 +96,7 @@ serve(async (req: Request) => {
         : "",
       created_at: ad.ad_delivery_start_time || "",
       stopped_at: ad.ad_delivery_stop_time || null,
+      impressions: ad.impressions || null,
     }));
 
     return new Response(
