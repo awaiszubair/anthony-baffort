@@ -381,6 +381,11 @@ const InspirationAds = () => {
                 </div>
                 <div className="p-4">
                   <h3 className="font-medium text-foreground mb-1 line-clamp-2">{ad.page_name || ad.name}</h3>
+                  {ad.snapshot_url && (
+                    <a href={ad.snapshot_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline truncate block mb-1">
+                      {ad.snapshot_url}
+                    </a>
+                  )}
                   {ad.text && <p className="text-sm text-muted-foreground mb-3 line-clamp-3">{ad.text}</p>}
                   <div className="flex flex-col gap-1.5 text-xs text-muted-foreground">
                     <div className="flex items-center justify-between">
