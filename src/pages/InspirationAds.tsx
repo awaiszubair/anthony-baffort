@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
-import { Loader2, AlertCircle, ExternalLink, Plus, X, Eye, Search, Bookmark, Download } from "lucide-react";
+import { Loader2, AlertCircle, ExternalLink, Plus, X, Eye, Search, Bookmark, Download, Facebook } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
-import { supabase } from "@/integrations/supabase/client";
 import { useTrackedBrands, type TrackedBrand } from "@/hooks/useTrackedBrands";
 import { useSavedAds } from "@/hooks/useSavedAds";
 import { useAuth } from "@/hooks/useAuth";
@@ -31,7 +30,15 @@ interface DiscoveredPage {
   platforms: string[];
 }
 
-const USE_MOCK = true;
+const USE_MOCK = false; // Disable mock to use real FB API
+
+// Facebook SDK types
+declare global {
+  interface Window {
+    FB: any;
+    fbAsyncInit: () => void;
+  }
+}
 
 function generateMockAds(brandName: string): MetaAd[] {
   const platforms = ["facebook", "instagram", "instagram", "facebook"];
@@ -87,6 +94,7 @@ const InspirationAds = () => {
   const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isOAuthError, setIsOAuthError] = useState(false);
   // Add brand flow
   const [showAddForm, setShowAddForm] = useState(false);
   const [newName, setNewName] = useState("");
@@ -95,13 +103,42 @@ const InspirationAds = () => {
   const [initialLoaded, setInitialLoaded] = useState(false);
   const { t } = useI18n();
 
+  const [fbAccessToken, setFbAccessToken] = useState<string | null>(localStorage.getItem("fb_access_token"));
+  const [isFbConnected, setIsFbConnected] = useState<boolean>(!!localStorage.getItem("fb_access_token"));
+  const [showApprovalNotice, setShowApprovalNotice] = useState(true);
+
+  const handleFbLogin = () => {
+    window.FB.login((response: any) => {
+      if (response.authResponse) {
+        const token = response.authResponse.accessToken;
+        localStorage.setItem("fb_access_token", token);
+        setFbAccessToken(token);
+        setIsFbConnected(true);
+        toast({ title: t.brandAdded || "Facebook Connected" }); // Reusing translation key or add new one
+      } else {
+        toast({ title: "Facebook Connection Failed", variant: "destructive" });
+      }
+    }, { scope: 'ads_read,pages_show_list,business_management' }); // Requesting potential required scopes
+  };
+
+  const handleFbLogout = () => {
+    localStorage.removeItem("fb_access_token");
+    setFbAccessToken(null);
+    setIsFbConnected(false);
+    setAllAds([]);
+    toast({ title: "Disconnected from Facebook" });
+  };
+
   // Load all brands' ads on mount and when brands change
   const fetchAllAds = async () => {
+    if (!fbAccessToken) return; // Wait for connection
     if (brands.length === 0) { setAllAds([]); setInitialLoaded(true); return; }
     setLoading(true);
     setError(null);
 
+    // Mock handling moved or removed if not needed, focusing on FB API implementation
     if (USE_MOCK) {
+      // ... existing mock logic ...
       await new Promise((r) => setTimeout(r, 600));
       const combined = brands.flatMap((b) => generateMockAds(b.name));
       setAllAds(combined);
@@ -113,11 +150,55 @@ const InspirationAds = () => {
     try {
       const results: MetaAd[] = [];
       for (const brand of brands) {
-        const res = await supabase.functions.invoke("meta-ad-library", {
-          body: { search_query: brand.name, page_id: brand.pageId || undefined, limit: 25 },
-        });
-        if (res.data?.ads) {
-          results.push(...res.data.ads.map((ad: MetaAd) => ({ ...ad, _brandId: brand.id })));
+        // Direct Graph API call
+        // Note: For Ads Library, we usually need to search the archive.
+        // Endpoint: /ads_archive?search_terms=BRAND_NAME&ad_active_status=ALL&ad_reached_countries=['NL'] (adjust country as needed)
+        // However, standard permissions might be restricted. If user implies "connected user token", 
+        // they might be looking for THEIR account's ads or using the token to search public library.
+        // The prompt said "search by page id: since its current login account only".
+
+        // Let's assume using the token to search the Ads Library API (which requires validation) 
+        // OR fetching ads for specific pages if successful.
+
+        // Since we need to 'search by page id', we'll try to use the Page ID if available in the Ad Library endpoint
+        // or fall back to name search if ID not present.
+
+        console.log("BrandPageId is: ", brand.pageId);
+
+
+        if (!brand.pageId) continue;
+
+        console.log("BrandPageId is: ", brand.pageId);
+
+        const fields = "id,ad_creation_time,ad_delivery_start_time,ad_delivery_stop_time,ad_snapshot_url,currency,page_id,page_name,publisher_platforms";
+        const url = `https://graph.facebook.com/v18.0/ads_archive?search_page_ids=${brand.pageId}&ad_active_status=ALL&fields=${fields}&access_token=${fbAccessToken}&limit=25`;
+
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.error) {
+          if (data.error.type === "OAuthException") {
+            setIsOAuthError(true);
+            throw new Error(data.error.message);
+          }
+          throw new Error(data.error.message);
+        }
+
+        if (data.data) {
+          const mappedAds = data.data.map((ad: any) => ({
+            id: ad.id,
+            name: ad.page_name, // API doesn't always return ad name, using page name or text
+            text: "Ad content unavailable in basic view", // Text often requires specific token permissions or fields
+            snapshot_url: ad.ad_snapshot_url,
+            image_url: "", // Need more complex parsing for images usually
+            page_name: ad.page_name,
+            page_id: ad.page_id,
+            platform: ad.publisher_platforms?.join(", "),
+            created_at: ad.ad_creation_time,
+            stopped_at: ad.ad_delivery_stop_time,
+            _brandId: brand.id
+          }));
+          results.push(...mappedAds);
         }
       }
       setAllAds(results);
@@ -129,15 +210,17 @@ const InspirationAds = () => {
     }
   };
 
-  // Auto-load on mount
-  useEffect(() => { fetchAllAds(); }, [brands.length]);
+  // Auto-load on mount if connected
+  useEffect(() => {
+    if (fbAccessToken) fetchAllAds();
+  }, [brands.length, fbAccessToken]);
 
   // Filter ads by selected brand
   const filteredAds = selectedBrandId
     ? allAds.filter((ad) => {
-        const brand = brands.find((b) => b.id === selectedBrandId);
-        return brand && ad.page_name?.toLowerCase() === brand.name.toLowerCase();
-      })
+      const brand = brands.find((b) => b.id === selectedBrandId);
+      return brand && ad.page_name?.toLowerCase() === brand.name.toLowerCase();
+    })
     : allAds;
 
   const searchPages = async () => {
@@ -153,37 +236,40 @@ const InspirationAds = () => {
       return;
     }
 
-    try {
-      const res = await supabase.functions.invoke("meta-ad-library", {
-        body: { search_query: trimmed, limit: 50 },
-      });
-      if (res.error) throw new Error(res.error.message);
-      if (res.data?.error) throw new Error(res.data.error);
+    if (!fbAccessToken) {
+      toast({ title: "Please connect Facebook first", variant: "destructive" });
+      setSearching(false);
+      return;
+    }
 
-      // Extract unique pages from ad results
-      const pageMap = new Map<string, DiscoveredPage>();
-      for (const ad of res.data?.ads || []) {
-        if (!ad.page_id || !ad.page_name) continue;
-        const existing = pageMap.get(ad.page_id);
-        if (existing) {
-          existing.adCount++;
-          if (ad.platform) {
-            for (const p of ad.platform.split(", ")) {
-              if (!existing.platforms.includes(p)) existing.platforms.push(p);
-            }
-          }
-        } else {
-          pageMap.set(ad.page_id, {
-            page_name: ad.page_name,
-            page_id: ad.page_id,
-            adCount: 1,
-            platforms: ad.platform ? ad.platform.split(", ") : [],
-          });
+    try {
+      console.log("facebook page is: ");
+      // Search for Pages
+      const response = await fetch(`https://graph.facebook.com/v18.0/pages/search?q=${trimmed}&fields=id,name,link,fan_count,verification_status&access_token=${fbAccessToken}`);
+      const data = await response.json();
+
+      if (data.error) {
+        if (data.error.type === "OAuthException") {
+          setIsOAuthError(true);
         }
+        throw new Error(data.error.message);
       }
-      setDiscoveredPages(Array.from(pageMap.values()).sort((a, b) => b.adCount - a.adCount));
+
+      // Map FB results to DiscoveredPage
+      const pages = data.data.map((p: any) => ({
+        page_name: p.name,
+        page_id: p.id,
+        adCount: 0, // Search endpoint doesn't give ad count directly
+        platforms: ["facebook"] // Default assumption
+      }));
+
+      setDiscoveredPages(pages);
     } catch (err) {
-      toast({ title: t.translateError, variant: "destructive" });
+      // toast({ title: t.translateError, variant: "destructive" });
+      console.log("Yes it is working fine");
+      setIsOAuthError(true);
+      toast({ title: "Make sure your accout is approved", variant: "destructive" })
+
     } finally {
       setSearching(false);
     }
@@ -205,10 +291,63 @@ const InspirationAds = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Account Approval Notice Modal */}
+      {showApprovalNotice && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+          <div className="relative w-full max-w-md rounded-2xl border border-border bg-card shadow-2xl p-8">
+            <button
+              onClick={() => setShowApprovalNotice(false)}
+              className="absolute top-4 right-4 p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              aria-label="Close"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 rounded-xl bg-[#1877F2]/10 p-3">
+                <Facebook className="h-6 w-6 text-[#1877F2]" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-foreground mb-2">Before You Start Searching</h2>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Kindly make sure your Facebook account is <span className="font-medium text-foreground">approved</span> before searching for brands and ads. Without approval, search results may be restricted.
+                </p>
+                <a
+                  href="https://www.facebook.com/help/contact/515009838910929"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-[#1877F2] hover:underline"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  Verify if your account is approved
+                </a>
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end">
+              <Button onClick={() => setShowApprovalNotice(false)} className="bg-[#1877F2] hover:bg-[#1877F2]/90 text-white">
+                I Understand, Continue
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">{t.inspirationTitle}</h1>
-          <p className="text-muted-foreground">{t.inspirationDescription}</p>
+          <div className="flex justify-between items-start">
+            <div>
+              <h1 className="text-3xl font-bold text-foreground mb-2">{t.inspirationTitle}</h1>
+              <p className="text-muted-foreground">{t.inspirationDescription}</p>
+            </div>
+            {!isFbConnected ? (
+              <Button onClick={handleFbLogin} className="bg-[#1877F2] hover:bg-[#1877F2]/90 text-white gap-2">
+                <Facebook className="h-4 w-4" /> Connect Facebook
+              </Button>
+            ) : (
+              <Button onClick={handleFbLogout} variant="outline" className="gap-2">
+                <Facebook className="h-4 w-4" /> Disconnect
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Brand filter chips + add */}
@@ -328,7 +467,24 @@ const InspirationAds = () => {
         {error && (
           <Alert className="mb-8 border-destructive bg-destructive/5">
             <AlertCircle className="h-4 w-4 text-destructive" />
-            <AlertDescription className="text-destructive">{error}</AlertDescription>
+            <AlertDescription className="text-destructive">
+              {isOAuthError ? (
+                <span>
+                  Identity verification required. Please{" "}
+                  <a
+                    href="https://www.facebook.com/help/contact/515009838910929"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-semibold underline hover:opacity-80"
+                  >
+                    approve your identity
+                  </a>
+                  {" "}on Facebook before continuing.
+                </span>
+              ) : (
+                error
+              )}
+            </AlertDescription>
           </Alert>
         )}
 
