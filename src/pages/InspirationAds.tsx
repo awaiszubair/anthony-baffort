@@ -100,6 +100,9 @@ const InspirationAds = () => {
   const [newName, setNewName] = useState("");
   const [searching, setSearching] = useState(false);
   const [discoveredPages, setDiscoveredPages] = useState<DiscoveredPage[]>([]);
+  const [pageCursor, setPageCursor] = useState<string | null>(null);     // ← new
+  const [hasMorePages, setHasMorePages] = useState(false);               // ← new
+  const [loadingMore, setLoadingMore] = useState(false);                 // ← new
   const [initialLoaded, setInitialLoaded] = useState(false);
   const { t } = useI18n();
 
@@ -160,8 +163,6 @@ const InspirationAds = () => {
         const response = await fetch(url);
         const data = await response.json();
 
-        console.log("The Data came are: ", data);
-
         if (data.error) {
           if (data.error.type === "OAuthException") {
             setIsOAuthError(true);
@@ -207,49 +208,68 @@ const InspirationAds = () => {
     })
     : allAds;
 
-  const searchPages = async () => {
+  const searchPages = async (isLoadMore = false) => {
     const trimmed = newName.trim();
     if (!trimmed) return;
-    setSearching(true);
-    setDiscoveredPages([]);
 
-    if (USE_MOCK) {
-      await new Promise((r) => setTimeout(r, 800));
-      setDiscoveredPages(generateMockPages(trimmed));
-      setSearching(false);
-      return;
+    if (!isLoadMore) {
+      setSearching(true);
+      setDiscoveredPages([]);
+      setPageCursor(null);
+      setHasMorePages(false);
+    } else {
+      setLoadingMore(true);
     }
 
     if (!fbAccessToken) {
       toast({ title: "Please connect Facebook first", variant: "destructive" });
       setSearching(false);
+      setLoadingMore(false);
       return;
     }
 
     try {
       const COUNTRIES = "US,GB,CA,AU,DE,FR,NL,AE,SA,PK,IN,BR,MX,ES,IT,PL,SE,NO,DK,BE";
       const fields = "page_id,page_name,publisher_platforms";
-      const url = `https://graph.facebook.com/v18.0/ads_archive?search_terms=${encodeURIComponent(trimmed)}&ad_type=ALL&ad_active_status=ALL&ad_reached_countries=[${COUNTRIES.split(',').map(c => `"${c}"`).join(',')}]&fields=${fields}&access_token=${fbAccessToken}&limit=50`;
+
+      let url = `https://graph.facebook.com/v18.0/ads_archive?search_terms=${encodeURIComponent(
+        trimmed
+      )}&ad_type=ALL&ad_active_status=ALL&ad_reached_countries=[${COUNTRIES
+        .split(',')
+        .map((c) => `"${c}"`)
+        .join(',')}]&fields=${fields}&access_token=${fbAccessToken}&limit=20`;
+
+      if (isLoadMore && pageCursor) {
+        url += `&after=${encodeURIComponent(pageCursor)}`;
+      }
 
       const response = await fetch(url);
       const data = await response.json();
 
-      console.log("The Data came are: ", data);
-
       if (data.error) {
         if (data.error.type === "OAuthException") setIsOAuthError(true);
-        throw new Error(data.error.message);
+        throw new Error(data.error.message || "Facebook API error");
       }
 
       const pageMap = new Map<string, DiscoveredPage>();
-      if (data.data) {
+
+      // Keep previous pages
+      if (isLoadMore) {
+        discoveredPages.forEach((p) => pageMap.set(p.page_id, { ...p }));
+      }
+
+      if (data.data && Array.isArray(data.data)) {
         for (const ad of data.data) {
           if (!ad.page_id) continue;
+
           if (pageMap.has(ad.page_id)) {
             const existing = pageMap.get(ad.page_id)!;
             existing.adCount += 1;
+
             ad.publisher_platforms?.forEach((p: string) => {
-              if (!existing.platforms.includes(p)) existing.platforms.push(p);
+              if (!existing.platforms.includes(p)) {
+                existing.platforms.push(p);
+              }
             });
           } else {
             pageMap.set(ad.page_id, {
@@ -263,13 +283,22 @@ const InspirationAds = () => {
       }
 
       setDiscoveredPages(Array.from(pageMap.values()));
+
+      // 🔥 Correct pagination logic
+      setHasMorePages(!!data.paging?.next);
+      setPageCursor(data.paging?.cursors?.after ?? null);
+
     } catch (err) {
       console.error("Page search error:", err);
-      setIsOAuthError(true);
-      toast({ title: "Make sure your account is approved", variant: "destructive" });
+      toast({ title: "Error loading pages", variant: "destructive" });
     } finally {
       setSearching(false);
+      setLoadingMore(false);
     }
+  };
+
+  const handleLoadMorePages = () => {
+    searchPages(true);
   };
 
   const selectPage = (page: DiscoveredPage) => {
@@ -283,6 +312,8 @@ const InspirationAds = () => {
     setShowAddForm(false);
     setNewName("");
     setDiscoveredPages([]);
+    setPageCursor(null);
+    setHasMorePages(false);
   };
 
   return (
@@ -387,7 +418,7 @@ const InspirationAds = () => {
                 autoFocus
                 onKeyDown={(e) => e.key === "Enter" && searchPages()}
               />
-              <Button size="sm" onClick={searchPages} disabled={!newName.trim() || searching} className="gap-1.5">
+              <Button size="sm" onClick={() => searchPages(false)} disabled={!newName.trim() || searching} className="gap-1.5">
                 {searching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />}
                 {t.searchPages}
               </Button>
@@ -424,6 +455,27 @@ const InspirationAds = () => {
                     </div>
                   </button>
                 ))}
+
+                {hasMorePages && (
+                  <div className="mt-6 flex justify-center">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleLoadMorePages}
+                      disabled={loadingMore}
+                      className="gap-2 min-w-[180px]"
+                    >
+                      {loadingMore ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Loading more...
+                        </>
+                      ) : (
+                        "Load more pages"
+                      )}
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
 
