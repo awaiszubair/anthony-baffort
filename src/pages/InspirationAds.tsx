@@ -155,10 +155,12 @@ const InspirationAds = () => {
         const COUNTRIES = "US,GB,CA,AU,DE,FR,NL,AE,SA,PK,IN,BR,MX,ES,IT,PL,SE,NO,DK,BE";
         const fields = "id,ad_creation_time,ad_delivery_start_time,ad_delivery_stop_time,ad_creative_bodies,ad_creative_link_captions,ad_creative_link_descriptions,ad_creative_link_titles,ad_snapshot_url,currency,page_id,page_name,publisher_platforms,impressions,spend";
 
-        const url = `https://graph.facebook.com/v18.0/ads_archive?search_page_ids=${brand.pageId}&ad_type=ALL&ad_active_status=ALL&ad_reached_countries=[${COUNTRIES.split(',').map(c => `"${c}"`).join(',')}]&fields=${fields}&access_token=${fbAccessToken}&limit=25`;
+        const url = `https://graph.facebook.com/v18.0/ads_archive?search_terms=${encodeURIComponent(brand.name)}&ad_type=ALL&ad_active_status=ALL&ad_reached_countries=[${COUNTRIES.split(',').map(c => `"${c}"`).join(',')}]&fields=${fields}&access_token=${fbAccessToken}&limit=25`;
 
         const response = await fetch(url);
         const data = await response.json();
+
+        console.log("The Data came are: ", data);
 
         if (data.error) {
           if (data.error.type === "OAuthException") {
@@ -231,6 +233,8 @@ const InspirationAds = () => {
 
       const response = await fetch(url);
       const data = await response.json();
+
+      console.log("The Data came are: ", data);
 
       if (data.error) {
         if (data.error.type === "OAuthException") setIsOAuthError(true);
