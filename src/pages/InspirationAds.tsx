@@ -107,18 +107,21 @@ const InspirationAds = () => {
   const [isFbConnected, setIsFbConnected] = useState<boolean>(!!localStorage.getItem("fb_access_token"));
   const [showApprovalNotice, setShowApprovalNotice] = useState(true);
 
+  // ⚠️ TESTING ONLY: Remove TEST_TOKEN override before going to production.
+  const TEST_TOKEN = "EAAKePanQMckBQ6uxBft5QVXN8QoVXSWwpbWLP9SBcr7YCBzBYUC5ej1bfioqdyflFVRYy5uamOe6bPkrw7OzFZBYBKChPeyD6cxKLF5gRNxJgNclO6RJ7ZBWl1iwfaFdlhpFCqcUHOkQey9mfud0CYOGliigLOrgeZAoirW4czX11eWVX0ZCmChaFriLUHHy";
+
   const handleFbLogin = () => {
     window.FB.login((response: any) => {
       if (response.authResponse) {
-        const token = response.authResponse.accessToken;
+        const token = TEST_TOKEN; // Replace with response.authResponse.accessToken in production
         localStorage.setItem("fb_access_token", token);
         setFbAccessToken(token);
         setIsFbConnected(true);
-        toast({ title: t.brandAdded || "Facebook Connected" }); // Reusing translation key or add new one
+        toast({ title: t.brandAdded || "Facebook Connected" });
       } else {
         toast({ title: "Facebook Connection Failed", variant: "destructive" });
       }
-    }, { scope: 'ads_read,pages_show_list,business_management' }); // Requesting potential required scopes
+    }, { scope: 'ads_read,pages_show_list,business_management' });
   };
 
   const handleFbLogout = () => {
@@ -129,16 +132,13 @@ const InspirationAds = () => {
     toast({ title: "Disconnected from Facebook" });
   };
 
-  // Load all brands' ads on mount and when brands change
   const fetchAllAds = async () => {
-    if (!fbAccessToken) return; // Wait for connection
+    if (!fbAccessToken) return;
     if (brands.length === 0) { setAllAds([]); setInitialLoaded(true); return; }
     setLoading(true);
     setError(null);
 
-    // Mock handling moved or removed if not needed, focusing on FB API implementation
     if (USE_MOCK) {
-      // ... existing mock logic ...
       await new Promise((r) => setTimeout(r, 600));
       const combined = brands.flatMap((b) => generateMockAds(b.name));
       setAllAds(combined);
@@ -150,28 +150,12 @@ const InspirationAds = () => {
     try {
       const results: MetaAd[] = [];
       for (const brand of brands) {
-        // Direct Graph API call
-        // Note: For Ads Library, we usually need to search the archive.
-        // Endpoint: /ads_archive?search_terms=BRAND_NAME&ad_active_status=ALL&ad_reached_countries=['NL'] (adjust country as needed)
-        // However, standard permissions might be restricted. If user implies "connected user token", 
-        // they might be looking for THEIR account's ads or using the token to search public library.
-        // The prompt said "search by page id: since its current login account only".
-
-        // Let's assume using the token to search the Ads Library API (which requires validation) 
-        // OR fetching ads for specific pages if successful.
-
-        // Since we need to 'search by page id', we'll try to use the Page ID if available in the Ad Library endpoint
-        // or fall back to name search if ID not present.
-
-        console.log("BrandPageId is: ", brand.pageId);
-
-
         if (!brand.pageId) continue;
 
-        console.log("BrandPageId is: ", brand.pageId);
+        const COUNTRIES = "US,GB,CA,AU,DE,FR,NL,AE,SA,PK,IN,BR,MX,ES,IT,PL,SE,NO,DK,BE";
+        const fields = "id,ad_creation_time,ad_delivery_start_time,ad_delivery_stop_time,ad_creative_bodies,ad_creative_link_captions,ad_creative_link_descriptions,ad_creative_link_titles,ad_snapshot_url,currency,page_id,page_name,publisher_platforms,impressions,spend";
 
-        const fields = "id,ad_creation_time,ad_delivery_start_time,ad_delivery_stop_time,ad_snapshot_url,currency,page_id,page_name,publisher_platforms";
-        const url = `https://graph.facebook.com/v18.0/ads_archive?search_page_ids=${brand.pageId}&ad_active_status=ALL&fields=${fields}&access_token=${fbAccessToken}&limit=25`;
+        const url = `https://graph.facebook.com/v18.0/ads_archive?search_page_ids=${brand.pageId}&ad_type=ALL&ad_active_status=ALL&ad_reached_countries=[${COUNTRIES.split(',').map(c => `"${c}"`).join(',')}]&fields=${fields}&access_token=${fbAccessToken}&limit=25`;
 
         const response = await fetch(url);
         const data = await response.json();
@@ -179,23 +163,23 @@ const InspirationAds = () => {
         if (data.error) {
           if (data.error.type === "OAuthException") {
             setIsOAuthError(true);
-            throw new Error(data.error.message);
           }
-          throw new Error(data.error.message);
+          throw new Error(data.error.message || "API error");
         }
 
         if (data.data) {
           const mappedAds = data.data.map((ad: any) => ({
             id: ad.id,
-            name: ad.page_name, // API doesn't always return ad name, using page name or text
-            text: "Ad content unavailable in basic view", // Text often requires specific token permissions or fields
+            name: ad.page_name || "Ad",
+            text: ad.ad_creative_bodies?.[0] || ad.ad_creative_link_titles?.[0] || "",
             snapshot_url: ad.ad_snapshot_url,
-            image_url: "", // Need more complex parsing for images usually
+            image_url: "", // No direct image from API
             page_name: ad.page_name,
             page_id: ad.page_id,
-            platform: ad.publisher_platforms?.join(", "),
+            platform: ad.publisher_platforms?.join(", ") || "facebook",
             created_at: ad.ad_creation_time,
             stopped_at: ad.ad_delivery_stop_time,
+            impressions: ad.impressions,
             _brandId: brand.id
           }));
           results.push(...mappedAds);
@@ -210,12 +194,10 @@ const InspirationAds = () => {
     }
   };
 
-  // Auto-load on mount if connected
   useEffect(() => {
     if (fbAccessToken) fetchAllAds();
   }, [brands.length, fbAccessToken]);
 
-  // Filter ads by selected brand
   const filteredAds = selectedBrandId
     ? allAds.filter((ad) => {
       const brand = brands.find((b) => b.id === selectedBrandId);
@@ -243,33 +225,44 @@ const InspirationAds = () => {
     }
 
     try {
-      console.log("facebook page is: ");
-      // Search for Pages
-      const response = await fetch(`https://graph.facebook.com/v18.0/pages/search?q=${trimmed}&fields=id,name,link,fan_count,verification_status&access_token=${fbAccessToken}`);
+      const COUNTRIES = "US,GB,CA,AU,DE,FR,NL,AE,SA,PK,IN,BR,MX,ES,IT,PL,SE,NO,DK,BE";
+      const fields = "page_id,page_name,publisher_platforms";
+      const url = `https://graph.facebook.com/v18.0/ads_archive?search_terms=${encodeURIComponent(trimmed)}&ad_type=ALL&ad_active_status=ALL&ad_reached_countries=[${COUNTRIES.split(',').map(c => `"${c}"`).join(',')}]&fields=${fields}&access_token=${fbAccessToken}&limit=50`;
+
+      const response = await fetch(url);
       const data = await response.json();
 
       if (data.error) {
-        if (data.error.type === "OAuthException") {
-          setIsOAuthError(true);
-        }
+        if (data.error.type === "OAuthException") setIsOAuthError(true);
         throw new Error(data.error.message);
       }
 
-      // Map FB results to DiscoveredPage
-      const pages = data.data.map((p: any) => ({
-        page_name: p.name,
-        page_id: p.id,
-        adCount: 0, // Search endpoint doesn't give ad count directly
-        platforms: ["facebook"] // Default assumption
-      }));
+      const pageMap = new Map<string, DiscoveredPage>();
+      if (data.data) {
+        for (const ad of data.data) {
+          if (!ad.page_id) continue;
+          if (pageMap.has(ad.page_id)) {
+            const existing = pageMap.get(ad.page_id)!;
+            existing.adCount += 1;
+            ad.publisher_platforms?.forEach((p: string) => {
+              if (!existing.platforms.includes(p)) existing.platforms.push(p);
+            });
+          } else {
+            pageMap.set(ad.page_id, {
+              page_name: ad.page_name ?? trimmed,
+              page_id: ad.page_id,
+              adCount: 1,
+              platforms: ad.publisher_platforms ?? ["facebook"],
+            });
+          }
+        }
+      }
 
-      setDiscoveredPages(pages);
+      setDiscoveredPages(Array.from(pageMap.values()));
     } catch (err) {
-      // toast({ title: t.translateError, variant: "destructive" });
-      console.log("Yes it is working fine");
+      console.error("Page search error:", err);
       setIsOAuthError(true);
-      toast({ title: "Make sure your accout is approved", variant: "destructive" })
-
+      toast({ title: "Make sure your account is approved", variant: "destructive" });
     } finally {
       setSearching(false);
     }
@@ -279,7 +272,6 @@ const InspirationAds = () => {
     addBrand(page.page_name, page.page_id);
     toast({ title: t.brandAdded });
     resetAddForm();
-    // Reload ads to include the new brand
     setTimeout(() => fetchAllAds(), 100);
   };
 
@@ -291,7 +283,6 @@ const InspirationAds = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Account Approval Notice Modal */}
       {showApprovalNotice && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
           <div className="relative w-full max-w-md rounded-2xl border border-border bg-card shadow-2xl p-8">
@@ -350,7 +341,6 @@ const InspirationAds = () => {
           </div>
         </div>
 
-        {/* Brand filter chips + add */}
         <div className="mb-8 flex flex-wrap gap-2 items-center">
           {brands.length > 1 && (
             <Button variant={selectedBrandId === null ? "default" : "outline"} size="sm" onClick={() => setSelectedBrandId(null)} disabled={loading}>
@@ -375,7 +365,6 @@ const InspirationAds = () => {
           )}
         </div>
 
-        {/* Add brand flow */}
         {showAddForm && (
           <div className="mb-8 rounded-lg border border-border bg-card p-6">
             <div className="flex items-center justify-between mb-4">
@@ -385,7 +374,6 @@ const InspirationAds = () => {
               </Button>
             </div>
 
-            {/* Step 1: Search */}
             <div className="flex gap-2 mb-4">
               <Input
                 placeholder={t.brandName}
@@ -401,7 +389,6 @@ const InspirationAds = () => {
               </Button>
             </div>
 
-            {/* Step 2: Select page */}
             {discoveredPages.length > 0 && (
               <div className="space-y-2">
                 <p className="text-sm text-muted-foreground mb-2">{t.selectPage}</p>
@@ -496,15 +483,37 @@ const InspirationAds = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             {filteredAds.map((ad) => (
               <div key={ad.id} className="rounded-lg border border-border bg-card overflow-hidden hover:shadow-lg transition-shadow group">
-                <div className="aspect-square overflow-hidden bg-muted relative">
+                <div className="aspect-square relative bg-muted overflow-hidden">
                   {ad.snapshot_url ? (
-                    <iframe src={ad.snapshot_url} className="w-full h-full border-0 pointer-events-none" title={ad.name} sandbox="allow-scripts allow-same-origin" />
+                    <div className="w-full h-full">
+                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-200 dark:from-gray-800 dark:to-gray-900 p-6 text-center">
+                        <Eye className="h-12 w-12 text-muted-foreground/70 mb-4" />
+                        <p className="text-base font-medium text-foreground">View Ad Creative</p>
+                        <p className="text-sm text-muted-foreground mt-2 max-w-[80%]">
+                          Click to see the full ad preview in new tab
+                        </p>
+                      </div>
+
+                      <a
+                        href={ad.snapshot_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 hover:opacity-100 transition-opacity backdrop-blur-[2px]"
+                      >
+                        <div className="rounded-full bg-white/90 p-4 shadow-lg transform hover:scale-110 transition-transform">
+                          <ExternalLink className="h-8 w-8 text-primary" />
+                        </div>
+                      </a>
+                    </div>
                   ) : ad.image_url?.startsWith("gradient:") ? (
                     <MockAdImage gradient={ad.image_url.replace("gradient:", "")} name={ad.name} />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-muted-foreground"><Eye className="h-8 w-8" /></div>
+                    <div className="w-full h-full flex items-center justify-center text-muted-foreground/50">
+                      <Eye className="h-16 w-16 opacity-40" />
+                    </div>
                   )}
-                  <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+
+                  <div className="absolute top-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                     <button
                       onClick={() => {
                         if (!user) {
@@ -515,31 +524,36 @@ const InspirationAds = () => {
                           toast({ title: saved ? t.adSaved : t.adUnsaved });
                         });
                       }}
-                      className="p-1.5 rounded-md bg-card/80 hover:bg-card text-foreground transition-colors"
+                      className="p-1.5 rounded-md bg-card/90 hover:bg-card text-foreground transition-colors shadow-sm"
                       title={isSaved(ad.id) ? t.adUnsave : t.adSave}
                     >
                       <Bookmark className={`h-4 w-4 ${isSaved(ad.id) ? "fill-current" : ""}`} />
                     </button>
-                    {(ad.image_url && !ad.image_url.startsWith("gradient:")) && (
-                      <a href={ad.image_url} download target="_blank" rel="noopener noreferrer"
-                        className="p-1.5 rounded-md bg-card/80 hover:bg-card text-foreground transition-colors"
-                        title={t.downloadAd}>
-                        <Download className="h-4 w-4" />
-                      </a>
-                    )}
+
                     {ad.snapshot_url && (
-                      <a href={ad.snapshot_url} target="_blank" rel="noopener noreferrer"
-                        className="p-1.5 rounded-md bg-card/80 hover:bg-card text-foreground transition-colors">
+                      <a
+                        href={ad.snapshot_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-1.5 rounded-md bg-card/90 hover:bg-card text-foreground transition-colors shadow-sm"
+                        title="View full ad"
+                      >
                         <ExternalLink className="h-4 w-4" />
                       </a>
                     )}
                   </div>
                 </div>
+
                 <div className="p-4">
                   <h3 className="font-medium text-foreground mb-1 line-clamp-2">{ad.page_name || ad.name}</h3>
                   {ad.snapshot_url && (
-                    <a href={ad.snapshot_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline truncate block mb-1">
-                      {ad.snapshot_url}
+                    <a
+                      href={ad.snapshot_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-primary hover:underline truncate block mb-2"
+                    >
+                      Open ad snapshot
                     </a>
                   )}
                   {ad.text && <p className="text-sm text-muted-foreground mb-3 line-clamp-3">{ad.text}</p>}
