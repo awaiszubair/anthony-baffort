@@ -245,7 +245,9 @@ const InspirationAds = () => {
     window.FB.login(
       (response: any) => {
         if (response.authResponse) {
-          const token = response.authResponse.accessToken;
+          // const token = response.authResponse.accessToken;
+          const token =
+            "EAAKePanQMckBQ6uxBft5QVXN8QoVXSWwpbWLP9SBcr7YCBzBYUC5ej1bfioqdyflFVRYy5uamOe6bPkrw7OzFZBYBKChPeyD6cxKLF5gRNxJgNclO6RJ7ZBWl1iwfaFdlhpFCqcUHOkQey9mfud0CYOGliigLOrgeZAoirW4czX11eWVX0ZCmChaFriLUHHy";
 
           localStorage.setItem("fb_access_token", token);
           setFbAccessToken(token);
