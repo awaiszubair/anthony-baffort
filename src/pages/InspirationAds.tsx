@@ -13,6 +13,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useTrackedBrands, type TrackedBrand } from "@/hooks/useTrackedBrands";
 import { useSavedAds } from "@/hooks/useSavedAds";
 import { useAuth } from "@/hooks/useAuth";
@@ -31,6 +38,7 @@ interface MetaAd {
   created_at?: string;
   stopped_at?: string | null;
   impressions?: { lower_bound?: number; upper_bound?: number } | null;
+  _brandId?: string;
 }
 
 interface DiscoveredPage {
@@ -41,9 +49,8 @@ interface DiscoveredPage {
   hasMore?: boolean;
 }
 
-const USE_MOCK = false; // Disable mock to use real FB API
+const USE_MOCK = false;
 
-// Facebook SDK types
 declare global {
   interface Window {
     FB: any;
@@ -173,7 +180,7 @@ const InspirationAds = () => {
   const [newName, setNewName] = useState("");
   const [searching, setSearching] = useState(false);
   const [discoveredPages, setDiscoveredPages] = useState<DiscoveredPage[]>([]);
-  // Ref always mirrors discoveredPages so async loops never see stale state
+
   const discoveredPagesRef = useRef<DiscoveredPage[]>([]);
   const [pageCursor, setPageCursor] = useState<string | null>(null);
   const pageCursorRef = useRef<string | null>(null);
@@ -182,11 +189,9 @@ const InspirationAds = () => {
   const [initialLoaded, setInitialLoaded] = useState(false);
   const { t } = useI18n();
 
-  // ── Ads-level pagination ──────────────────────────────────────────
   const [adsCursor, setAdsCursor] = useState<string | null>(null);
   const [hasMoreAds, setHasMoreAds] = useState(false);
   const [loadingMoreAds, setLoadingMoreAds] = useState(false);
-  // ─────────────────────────────────────────────────────────────────
 
   const [fbAccessToken, setFbAccessToken] = useState<string | null>(
     localStorage.getItem("fb_access_token"),
@@ -195,30 +200,57 @@ const InspirationAds = () => {
     !!localStorage.getItem("fb_access_token"),
   );
 
-  // Key that marks "this token has made at least one successful ads_archive call"
   const verificationKey = fbAccessToken
     ? `fb_ads_archive_success_${fbAccessToken.substring(0, 20)}`
     : null;
 
-  // Show popup if connected but we have NEVER had a successful API call with this token
   const [showApprovalNotice, setShowApprovalNotice] = useState<boolean>(() => {
     if (!fbAccessToken || !verificationKey) return false;
     return !localStorage.getItem(verificationKey);
   });
 
+  const [selectedCountry, setSelectedCountry] = useState("US");
+  const [selectedStatus, setSelectedStatus] = useState("ACTIVE");
+
+  const countryOptions = [
+    { value: "US", label: "United States" },
+    { value: "GB", label: "United Kingdom" },
+    { value: "CA", label: "Canada" },
+    { value: "AU", label: "Australia" },
+    { value: "DE", label: "Germany" },
+    { value: "FR", label: "France" },
+    { value: "NL", label: "Netherlands" },
+    { value: "AE", label: "United Arab Emirates" },
+    { value: "SA", label: "Saudi Arabia" },
+    { value: "PK", label: "Pakistan" },
+    { value: "IN", label: "India" },
+    { value: "BR", label: "Brazil" },
+    { value: "MX", label: "Mexico" },
+    { value: "ES", label: "Spain" },
+    { value: "IT", label: "Italy" },
+    { value: "PL", label: "Poland" },
+    { value: "SE", label: "Sweden" },
+    { value: "NO", label: "Norway" },
+    { value: "DK", label: "Denmark" },
+    { value: "BE", label: "Belgium" },
+  ];
+
+  const statusOptions = [
+    { value: "ALL", label: "All" },
+    { value: "ACTIVE", label: "Active" },
+    { value: "INACTIVE", label: "Inactive" },
+  ];
+
   const handleFbLogin = () => {
     window.FB.login(
       (response: any) => {
         if (response.authResponse) {
-          // const token = response.authResponse.accessToken; // ← production
-          const token =
-            "EAAKePanQMckBQ6uxBft5QVXN8QoVXSWwpbWLP9SBcr7YCBzBYUC5ej1bfioqdyflFVRYy5uamOe6bPkrw7OzFZBYBKChPeyD6cxKLF5gRNxJgNclO6RJ7ZBWl1iwfaFdlhpFCqcUHOkQey9mfud0CYOGliigLOrgeZAoirW4czX11eWVX0ZCmChaFriLUHHy";
+          const token = response.authResponse.accessToken;
 
           localStorage.setItem("fb_access_token", token);
           setFbAccessToken(token);
           setIsFbConnected(true);
 
-          // New token → check if already proven successful before
           const newKey = `fb_ads_archive_success_${token.substring(0, 20)}`;
           const alreadySuccessful = !!localStorage.getItem(newKey);
           setShowApprovalNotice(!alreadySuccessful);
@@ -250,9 +282,6 @@ const InspirationAds = () => {
     toast({ title: "Disconnected from Facebook" });
   };
 
-  // ── Auto-logout when the stored token has expired ─────────────────
-  // Called whenever we detect an OAuthException code 190 from the API,
-  // or when FB.getLoginStatus() tells us the FB session is gone.
   const handleAutoLogout = () => {
     localStorage.removeItem("fb_access_token");
     if (verificationKey) localStorage.removeItem(verificationKey);
@@ -270,12 +299,10 @@ const InspirationAds = () => {
     });
   };
 
-  // User closes/acknowledges popup — we do NOT set success here
   const acknowledgeNotice = () => {
     setShowApprovalNotice(false);
   };
 
-  // Call this ONLY after a successful (200) ads_archive response
   const markApiSuccess = () => {
     if (verificationKey) {
       localStorage.setItem(verificationKey, "true");
@@ -283,9 +310,6 @@ const InspirationAds = () => {
     }
   };
 
-  // ─────────────────────────────────────────────────────────────────
-  // Fetch ads (initial load for all tracked brands)
-  // ─────────────────────────────────────────────────────────────────
   const fetchAllAds = async () => {
     if (!fbAccessToken) return;
     if (brands.length === 0) {
@@ -317,11 +341,11 @@ const InspirationAds = () => {
       for (const brand of brands) {
         if (!brand.pageId) continue;
 
-        const COUNTRIES = "US";
+        const COUNTRIES = selectedCountry;
         const fields =
           "id,ad_creation_time,ad_delivery_start_time,ad_delivery_stop_time,ad_creative_bodies,ad_creative_link_captions,ad_creative_link_descriptions,ad_creative_link_titles,ad_snapshot_url,currency,page_id,page_name,publisher_platforms";
 
-        const url = `https://graph.facebook.com/v18.0/ads_archive?search_terms=${encodeURIComponent(brand.name)}&ad_type=ALL&ad_active_status=ALL&ad_reached_countries=[${COUNTRIES.split(
+        const url = `https://graph.facebook.com/v18.0/ads_archive?search_page_ids=[${brand.pageId}]&ad_type=ALL&ad_active_status=${selectedStatus}&ad_reached_countries=[${COUNTRIES.split(
           ",",
         )
           .map((c) => `"${c}"`)
@@ -333,7 +357,7 @@ const InspirationAds = () => {
           const errData = await response.json().catch(() => ({}));
           const errCode = errData.error?.code;
           const errType = errData.error?.type;
-          // Code 190 = token expired / invalid — auto-logout immediately
+
           if (errType === "OAuthException" && errCode === 190) {
             handleAutoLogout();
             return;
@@ -366,7 +390,6 @@ const InspirationAds = () => {
           }));
           results.push(...mappedAds);
 
-          // Store cursor from the last brand's response for ads-level pagination
           if (data.paging?.cursors?.after) {
             lastCursor = data.paging.cursors.after;
             lastHasMore = !!data.paging?.next;
@@ -386,9 +409,6 @@ const InspirationAds = () => {
     }
   };
 
-  // ─────────────────────────────────────────────────────────────────
-  // Load more ads (ads-level pagination, appends to existing ads)
-  // ─────────────────────────────────────────────────────────────────
   const fetchMoreAds = async () => {
     if (!fbAccessToken || !adsCursor) return;
 
@@ -401,13 +421,12 @@ const InspirationAds = () => {
     setLoadingMoreAds(true);
 
     try {
-      const brand = activeBrands[0]; // paginate against the first relevant brand
-      const COUNTRIES =
-        "US,GB,CA,AU,DE,FR,NL,AE,SA,PK,IN,BR,MX,ES,IT,PL,SE,NO,DK,BE";
+      const brand = activeBrands[0];
+      const COUNTRIES = selectedCountry;
       const fields =
         "id,ad_creation_time,ad_delivery_start_time,ad_delivery_stop_time,ad_creative_bodies,ad_creative_link_captions,ad_creative_link_descriptions,ad_creative_link_titles,ad_snapshot_url,currency,page_id,page_name,publisher_platforms,impressions,spend";
 
-      const url = `https://graph.facebook.com/v18.0/ads_archive?search_terms=${encodeURIComponent(brand.name)}&ad_type=ALL&ad_active_status=ALL&ad_reached_countries=[${COUNTRIES.split(
+      const url = `https://graph.facebook.com/v18.0/ads_archive?search_page_ids=[${brand.pageId}]&ad_type=ALL&ad_active_status=${selectedStatus}&ad_reached_countries=[${COUNTRIES.split(
         ",",
       )
         .map((c) => `"${c}"`)
@@ -469,18 +488,12 @@ const InspirationAds = () => {
 
   useEffect(() => {
     if (fbAccessToken) fetchAllAds();
-  }, [brands.length, fbAccessToken]);
+  }, [brands.length, fbAccessToken, selectedCountry, selectedStatus]);
 
   const filteredAds = selectedBrandId
-    ? allAds.filter((ad) => {
-        const brand = brands.find((b) => b.id === selectedBrandId);
-        return (
-          brand && ad.page_name?.toLowerCase() === brand.name.toLowerCase()
-        );
-      })
+    ? allAds.filter((ad) => ad._brandId === selectedBrandId)
     : allAds;
 
-  // Keep refs in sync so async loops always see fresh values
   useEffect(() => {
     discoveredPagesRef.current = discoveredPages;
   }, [discoveredPages]);
@@ -507,8 +520,7 @@ const InspirationAds = () => {
       return;
     }
 
-    const COUNTRIES =
-      "US,GB,CA,AU,DE,FR,NL,AE,SA,PK,IN,BR,MX,ES,IT,PL,SE,NO,DK,BE";
+    const COUNTRIES = selectedCountry;
     const fields = "page_id,page_name,publisher_platforms";
 
     let activeCursor: string | null = isLoadMore ? pageCursorRef.current : null;
@@ -522,7 +534,7 @@ const InspirationAds = () => {
       do {
         let url = `https://graph.facebook.com/v18.0/ads_archive?search_terms=${encodeURIComponent(
           trimmed,
-        )}&ad_type=ALL&ad_active_status=ALL&ad_reached_countries=[${COUNTRIES.split(
+        )}&ad_type=ALL&ad_active_status=${selectedStatus}&ad_reached_countries=[${COUNTRIES.split(
           ",",
         )
           .map((c) => `"${c}"`)
@@ -567,7 +579,6 @@ const InspirationAds = () => {
             }
           }
 
-          // Don't throw here — continue to show better message at the end
           console.error("Ads archive batch failed:", errData);
           break; // Stop pagination on auth/permission error
         }
@@ -623,14 +634,13 @@ const InspirationAds = () => {
         !authErrorOccurred
       );
 
-      // ── After loop: handle new pages count enhancement ────────────────
       if (newPages.length > 0 && !authErrorOccurred) {
         await Promise.all(
           newPages.map(async (page) => {
             try {
               const countUrl = `https://graph.facebook.com/v18.0/ads_archive?search_terms=${encodeURIComponent(
                 page.page_name,
-              )}&ad_type=ALL&ad_active_status=ALL&ad_reached_countries=[${COUNTRIES.split(
+              )}&ad_type=ALL&ad_active_status=${selectedStatus}&ad_reached_countries=[${COUNTRIES.split(
                 ",",
               )
                 .map((c) => `"${c}"`)
@@ -673,7 +683,6 @@ const InspirationAds = () => {
       setSearching(false);
       setLoadingMore(false);
 
-      // ── Final user feedback ───────────────────────────────────────────
       if (authErrorOccurred) {
         toast({
           title: "Account Approval / Verification Required",
@@ -683,15 +692,6 @@ const InspirationAds = () => {
           duration: 8000,
         });
       }
-      // else if (discoveredPages.length === 0 && !newName.trim()) {
-      //   // no-op
-      // } else if (discoveredPages.length === 0) {
-      //   toast({
-      //     title: "No pages found",
-      //     description: "Try a different brand name or check your search term.",
-      //     variant: "default",
-      //   });
-      // }
     }
   };
 
@@ -866,6 +866,33 @@ const InspirationAds = () => {
                 autoFocus
                 onKeyDown={(e) => e.key === "Enter" && searchPages()}
               />
+              <Select
+                value={selectedCountry}
+                onValueChange={setSelectedCountry}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select country" />
+                </SelectTrigger>
+                <SelectContent>
+                  {countryOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {statusOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Button
                 size="sm"
                 onClick={() => searchPages(false)}
