@@ -264,7 +264,7 @@ const InspirationAds = () => {
         }
       },
       // { scope: "ads_read,pages_show_list" },
-      { scope: "" },
+      { scope: "ads_read" },
 
     );
   };
