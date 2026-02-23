@@ -245,7 +245,8 @@ const InspirationAds = () => {
     window.FB.login(
       (response: any) => {
         if (response.authResponse) {
-          const token = response.authResponse.accessToken;
+          // const token = response.authResponse.accessToken;
+          const token = "EAAKePanQMckBQ6uxBft5QVXN8QoVXSWwpbWLP9SBcr7YCBzBYUC5ej1bfioqdyflFVRYy5uamOe6bPkrw7OzFZBYBKChPeyD6cxKLF5gRNxJgNclO6RJ7ZBWl1iwfaFdlhpFCqcUHOkQey9mfud0CYOGliigLOrgeZAoirW4czX11eWVX0ZCmChaFriLUHHy";
 
           localStorage.setItem("fb_access_token", token);
           setFbAccessToken(token);
@@ -1076,7 +1077,7 @@ const InspirationAds = () => {
                           className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 hover:opacity-100 transition-opacity backdrop-blur-[2px]"
                         >
                           <div className="rounded-full bg-white/90 p-4 shadow-lg transform hover:scale-110 transition-transform">
-                            <ExternalLink className="h-8 w-8 text-primary" />
+                            <ExternalLink className="h-8 w-8 text-primary text-black" />
                           </div>
                         </a>
                       </div>
