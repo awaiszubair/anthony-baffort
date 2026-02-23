@@ -245,9 +245,7 @@ const InspirationAds = () => {
     window.FB.login(
       (response: any) => {
         if (response.authResponse) {
-          // const token = response.authResponse.accessToken;
-          const token =
-            "EAAKePanQMckBQ6uxBft5QVXN8QoVXSWwpbWLP9SBcr7YCBzBYUC5ej1bfioqdyflFVRYy5uamOe6bPkrw7OzFZBYBKChPeyD6cxKLF5gRNxJgNclO6RJ7ZBWl1iwfaFdlhpFCqcUHOkQey9mfud0CYOGliigLOrgeZAoirW4czX11eWVX0ZCmChaFriLUHHy";
+          const token = response.authResponse.accessToken;
 
           localStorage.setItem("fb_access_token", token);
           setFbAccessToken(token);
@@ -265,7 +263,9 @@ const InspirationAds = () => {
           });
         }
       },
-      { scope: "ads_read,pages_show_list" },
+      // { scope: "ads_read,pages_show_list" },
+      { scope: "" },
+
     );
   };
 
@@ -743,7 +743,7 @@ const InspirationAds = () => {
                   results may be restricted.
                 </p>
                 <a
-                  href="https://www.facebook.com/help/contact/515009838910929"
+                  href="https://www.facebook.com/id/hub/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 text-sm font-medium text-[#1877F2] hover:underline"
