@@ -245,8 +245,7 @@ const InspirationAds = () => {
     window.FB.login(
       (response: any) => {
         if (response.authResponse) {
-          // const token = response.authResponse.accessToken;
-          const token = "EAAKePanQMckBQ6uxBft5QVXN8QoVXSWwpbWLP9SBcr7YCBzBYUC5ej1bfioqdyflFVRYy5uamOe6bPkrw7OzFZBYBKChPeyD6cxKLF5gRNxJgNclO6RJ7ZBWl1iwfaFdlhpFCqcUHOkQey9mfud0CYOGliigLOrgeZAoirW4czX11eWVX0ZCmChaFriLUHHy";
+          const token = response.authResponse.accessToken;
 
           localStorage.setItem("fb_access_token", token);
           setFbAccessToken(token);
@@ -641,9 +640,7 @@ const InspirationAds = () => {
         await Promise.all(
           newPages.map(async (page) => {
             try {
-              const countUrl = `https://graph.facebook.com/v18.0/ads_archive?search_terms=${encodeURIComponent(
-                page.page_name,
-              )}&ad_type=ALL&ad_active_status=${selectedStatus}&ad_reached_countries=[${COUNTRIES.split(
+              const countUrl = `https://graph.facebook.com/v18.0/ads_archive?search_page_ids=[${page.page_id}]&ad_type=ALL&ad_active_status=${selectedStatus}&ad_reached_countries=[${COUNTRIES.split(
                 ",",
               )
                 .map((c) => `"${c}"`)
