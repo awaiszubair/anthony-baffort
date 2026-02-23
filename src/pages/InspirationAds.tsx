@@ -1021,16 +1021,17 @@ const InspirationAds = () => {
             <AlertDescription className="text-destructive">
               {isOAuthError ? (
                 <span>
-                  Identity verification required. Please{" "}
-                  <a
-                    href="https://www.facebook.com/help/contact/515009838910929"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-semibold underline hover:opacity-80"
-                  >
-                    verify your identity
-                  </a>{" "}
-                  on Facebook before continuing.
+                  Ads for this page/brand are not available in Meta's Ads
+                  Library or the page is restricted.
+                  <br />
+                  <br />
+                  Possible reasons: • No active ads running on this page • The
+                  page is blocked/restricted by Meta policies • Temporary API
+                  issue for this specific page
+                  <br />
+                  <br />
+                  <strong>What to do:</strong>• Try a different brand or page •
+                  Wait a few minutes and retry.
                 </span>
               ) : (
                 error
