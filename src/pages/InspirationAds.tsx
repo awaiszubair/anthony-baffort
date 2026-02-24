@@ -1,5 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import {
+  FaFacebookF,
+  FaInstagram,
+  FaFacebookMessenger,
+} from "react-icons/fa";
+import {
   Loader2,
   AlertCircle,
   ExternalLink,
@@ -245,7 +250,8 @@ const InspirationAds = () => {
     window.FB.login(
       (response: any) => {
         if (response.authResponse) {
-          const token = response.authResponse.accessToken;
+          // const token = response.authResponse.accessToken;
+          const token = "EAAKePanQMckBQ6uxBft5QVXN8QoVXSWwpbWLP9SBcr7YCBzBYUC5ej1bfioqdyflFVRYy5uamOe6bPkrw7OzFZBYBKChPeyD6cxKLF5gRNxJgNclO6RJ7ZBWl1iwfaFdlhpFCqcUHOkQey9mfud0CYOGliigLOrgeZAoirW4czX11eWVX0ZCmChaFriLUHHy";
 
           localStorage.setItem("fb_access_token", token);
           setFbAccessToken(token);
@@ -499,6 +505,39 @@ const InspirationAds = () => {
   useEffect(() => {
     discoveredPagesRef.current = discoveredPages;
   }, [discoveredPages]);
+
+  const openPreview = (ad: MetaAd) => {
+    if (!ad.snapshot_url) {
+      toast({
+        title: "No preview available",
+        description: "This ad doesn't have a snapshot URL.",
+        variant: "default",
+      });
+      return;
+    }
+
+    // Yeh popup browser-like feel dega (size adjust kar sakte ho)
+    const width = 700;
+    const height = 800;
+    const left = (window.screen.width / 2) - (width / 2);
+    const top = (window.screen.height / 2) - (height / 2);
+
+    const popup = window.open(
+      ad.snapshot_url,
+      'adPreviewPopup',
+      `width=${width},height=${height},top=${top},left=${left},resizable=yes,scrollbars=yes,toolbar=no,menubar=no,location=yes,status=yes`
+    );
+
+    if (!popup || popup.closed || typeof popup.closed === 'undefined') {
+      // Popup blocker ne rok diya → fallback to new tab
+      window.open(ad.snapshot_url, '_blank', 'noopener,noreferrer');
+      toast({
+        title: "Popup blocked",
+        description: "Opening in new tab instead. Please allow popups for this site.",
+        variant: "default",
+      });
+    }
+  };
 
   const searchPages = async (isLoadMore = false) => {
     const trimmed = newName.trim();
@@ -1052,135 +1091,193 @@ const InspirationAds = () => {
               {filteredAds.map((ad) => (
                 <div
                   key={ad.id}
-                  className="rounded-lg border border-border bg-card overflow-hidden hover:shadow-lg transition-shadow group"
+                  className="rounded-xl border border-border bg-card overflow-hidden hover:shadow-xl hover:border-primary/50 transition-all duration-300 group"
                 >
-                  <div className="aspect-square relative bg-muted overflow-hidden">
-                    {ad.snapshot_url ? (
-                      <div className="w-full h-full">
-                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-200 dark:from-gray-800 dark:to-gray-900 p-6 text-center">
-                          <Eye className="h-12 w-12 text-muted-foreground/70 mb-4" />
-                          <p className="text-base font-medium text-foreground">
-                            View Ad Creative
-                          </p>
-                          <p className="text-sm text-muted-foreground mt-2 max-w-[80%]">
-                            Click to see the full ad preview in new tab
-                          </p>
+                  {/* Header */}
+                  <div className="relative h-64 overflow-hidden">
+                    {/* Gradient */}
+                    <div
+                      className={`absolute inset-0 bg-gradient-to-br ${ad.platform?.toLowerCase().includes("instagram")
+                        ? "from-purple-500 via-pink-500 to-orange-500"
+                        : ad.platform?.toLowerCase().includes("facebook")
+                          ? "from-blue-600 via-blue-500 to-cyan-500"
+                          : "from-indigo-600 via-purple-500 to-pink-500"
+                        } opacity-90`}
+                    />
+
+                    {/* Pattern */}
+                    <div className="absolute inset-0 opacity-10 pointer-events-none">
+                      <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                          <pattern id={`pattern-${ad.id}`} x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+                            <circle cx="20" cy="20" r="1.5" fill="white" />
+                          </pattern>
+                        </defs>
+                        <rect width="100%" height="100%" fill={`url(#pattern-${ad.id})`} />
+                      </svg>
+                    </div>
+
+                    {/* Overlay */}
+                    <div className="absolute inset-0 bg-black/35" />
+
+                    {/* Content */}
+                    <div className="relative h-full flex flex-col p-5">
+                      {/* Top right actions */}
+                      <div className="flex justify-end mb-3">
+                        <div className="flex gap-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (!user) {
+                                toast({ title: t.loginToSave, variant: "destructive" });
+                                return;
+                              }
+                              toggleSave(ad).then((saved) => {
+                                toast({ title: saved ? t.adSaved : t.adUnsaved });
+                              });
+                            }}
+                            className="p-2 rounded-lg bg-white/25 hover:bg-white/35 backdrop-blur-md border border-white/30 transition-all"
+                            title={isSaved(ad.id) ? t.adUnsave : t.adSave}
+                          >
+                            <Bookmark className={`h-4.5 w-4.5 text-white ${isSaved(ad.id) ? "fill-current" : ""}`} />
+                          </button>
+
+                          {ad.snapshot_url && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openPreview(ad);
+                              }}
+                              className="p-2 rounded-lg bg-white/25 hover:bg-white/35 backdrop-blur-md border border-white/30 transition-all"
+                              title="View ad preview"
+                            >
+                              <Eye className="h-4.5 w-4.5 text-white" />
+                            </button>
+                          )}
                         </div>
-
-                        <a
-                          href={ad.snapshot_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 hover:opacity-100 transition-opacity backdrop-blur-[2px]"
-                        >
-                          <div className="rounded-full bg-white/90 p-4 shadow-lg transform hover:scale-110 transition-transform">
-                            <ExternalLink className="h-8 w-8 text-primary text-black" />
-                          </div>
-                        </a>
                       </div>
-                    ) : ad.image_url?.startsWith("gradient:") ? (
-                      <MockAdImage
-                        gradient={ad.image_url.replace("gradient:", "")}
-                        name={ad.name}
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-muted-foreground/50">
-                        <Eye className="h-16 w-16 opacity-40" />
-                      </div>
-                    )}
 
-                    <div className="absolute top-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                      <button
-                        onClick={() => {
-                          if (!user) {
-                            toast({
-                              title: t.loginToSave,
-                              variant: "destructive",
-                            });
-                            return;
-                          }
-                          toggleSave(ad).then((saved) => {
-                            toast({ title: saved ? t.adSaved : t.adUnsaved });
-                          });
-                        }}
-                        className="p-1.5 rounded-md bg-card/90 hover:bg-card text-foreground transition-colors shadow-sm"
-                        title={isSaved(ad.id) ? t.adUnsave : t.adSave}
-                      >
-                        <Bookmark
-                          className={`h-4 w-4 ${isSaved(ad.id) ? "fill-current" : ""}`}
-                        />
-                      </button>
-
-                      {ad.snapshot_url && (
-                        <a
-                          href={ad.snapshot_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="p-1.5 rounded-md bg-card/90 hover:bg-card text-foreground transition-colors shadow-sm"
-                          title="View full ad"
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                        </a>
+                      {/* Ad text */}
+                      {ad.text && (
+                        <p className="text-white text-sm leading-relaxed line-clamp-5 mb-3 drop-shadow-md">
+                          {ad.text}
+                        </p>
                       )}
+
+                      {/* Page name */}
+                      <h3 className="text-lg font-bold text-white line-clamp-2 drop-shadow-lg mt-auto mb-2">
+                        {ad.page_name || ad.name}
+                      </h3>
+
+                      {/* Status */}
+                      <div className="flex items-center gap-2">
+                        {!ad.stopped_at ? (
+                          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-600/50 backdrop-blur-md border border-emerald-400/40 text-sm">
+                            <span className="w-2 h-2 rounded-full bg-emerald-300 shadow-lg shadow-emerald-400/70 animate-pulse" />
+                            <span className="text-emerald-50 font-semibold">{t.active}</span>
+                          </div>
+                        ) : (
+                          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/25 backdrop-blur-md border border-white/30 text-sm">
+                            <span className="w-2 h-2 rounded-full bg-gray-300" />
+                            <span className="text-white font-semibold">{t.stopped}</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
 
-                  <div className="p-4">
-                    <h3 className="font-medium text-foreground mb-1 line-clamp-2">
-                      {ad.page_name || ad.name}
-                    </h3>
-                    {ad.snapshot_url && (
-                      <a
-                        href={ad.snapshot_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-primary hover:underline truncate block mb-2"
-                      >
-                        Open ad snapshot
-                      </a>
-                    )}
-                    {ad.text && (
-                      <p className="text-sm text-muted-foreground mb-3 line-clamp-3">
-                        {ad.text}
-                      </p>
-                    )}
-                    <div className="flex flex-col gap-1.5 text-xs text-muted-foreground">
-                      <div className="flex items-center gap-x-2 justify-between">
-                        {ad.platform && (
-                          <span className="capitalize px-4 py-2 break-words rounded-full bg-muted text-muted-foreground">
-                            {ad?.platform}
-                          </span>
-                        )}
-                        {!ad.stopped_at ? (
-                          <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-medium">
-                            {t.active}
-                          </span>
-                        ) : (
-                          <span className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
-                            {t.stopped}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center justify-between">
-                        {ad.created_at && (
-                          <span>
-                            {t.activeSince}{" "}
-                            {new Date(ad.created_at).toLocaleDateString()}
-                          </span>
-                        )}
-                        {ad.impressions &&
-                          ad.impressions.lower_bound != null && (
-                            <span>
-                              {t.reach}:{" "}
-                              {ad.impressions.lower_bound.toLocaleString()}–
-                              {(
-                                ad.impressions.upper_bound ??
-                                ad.impressions.lower_bound
-                              ).toLocaleString()}
-                            </span>
-                          )}
-                      </div>
+                  {/* Body */}
+                  <div className="p-5 space-y-6">
+                    {/* Stats */}
+                    <div className="grid grid-cols-2 gap-4">
+                      {ad.created_at && (
+                        <div className="p-4 rounded-xl bg-muted/60 border border-border/50 hover:border-border transition-colors">
+                          <div className="text-xs text-muted-foreground mb-1 font-medium uppercase tracking-wide">
+                            {t.activeSince}
+                          </div>
+                          <div className="text-sm font-bold text-foreground">
+                            {new Date(ad.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                          </div>
+                        </div>
+                      )}
+
+                      {ad.impressions?.lower_bound != null && (
+                        <div className="p-4 rounded-xl bg-muted/60 border border-border/50 hover:border-border transition-colors">
+                          <div className="text-xs text-muted-foreground mb-1 font-medium uppercase tracking-wide">
+                            {t.reach}
+                          </div>
+                          <div className="text-sm font-bold text-foreground">
+                            {(ad.impressions.lower_bound / 1000).toFixed(0)}K
+                            {ad.impressions.upper_bound && ` – ${(ad.impressions.upper_bound / 1000).toFixed(0)}K`}
+                          </div>
+                        </div>
+                      )}
                     </div>
+
+                    {/* Platforms - react-icons wale icons */}
+                    {ad.platform && (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <div className="w-1 h-4 bg-primary rounded-full" />
+                          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                            Platforms
+                          </span>
+                        </div>
+
+                        <div className="flex flex-wrap gap-3">
+                          {ad.platform.split(",").map((platform, idx) => {
+                            const name = platform.trim().toLowerCase();
+                            let iconColor = "text-gray-500";
+                            let bgColor = "bg-gray-200/70 dark:bg-gray-800/50 border border-gray-400/30 dark:border-gray-600/40";
+
+                            let IconComponent = null;
+
+                            if (name.includes("instagram")) {
+                              console.log("instagram icon gowing to show");
+                              iconColor = "bg-clip-text text-pink-500 bg-gradient-to-br from-[#feda75] via-[#fa7e1e] via-[#d62976] via-[#962fbf] to-[#4f5bd5]";
+                              bgColor = "bg-gradient-to-br from-[#feda75]/15 via-[#d62976]/15 to-[#4f5bd5]/15 border border-pink-400/40";
+                              IconComponent = FaInstagram;
+                            } else if (name.includes("facebook")) {
+                              console.log("facebook icon gowing to show");
+                              iconColor = "text-[#1877F2]";
+                              bgColor = "bg-blue-100/70 dark:bg-blue-950/50 border border-blue-500/40";
+                              IconComponent = FaFacebookF;
+                            } else if (name.includes("messenger")) {
+                              iconColor = "text-[#00A3FF]";
+                              bgColor = "bg-cyan-100/70 dark:bg-cyan-950/50 border border-cyan-500/40";
+                              IconComponent = FaFacebookMessenger;
+                            }
+                            else if (name.includes("audience_network")) {
+                              iconColor = "text-[#0064e0]";
+                              bgColor = "bg-indigo-100/70 dark:bg-indigo-950/50 border border-indigo-500/40";
+                              IconComponent = () => <span className="text-xs font-bold">AN</span>; // fallback for Audience Network
+                            }
+
+                            return (
+                              <div
+                                key={idx}
+                                className={`flex items-center justify-center w-10 h-10 rounded-full ${bgColor} backdrop-blur-sm shadow-sm hover:shadow-md transition-all`}
+                                title={name.replace("audience_network", "Audience Network").replace(/\b\w/g, l => l.toUpperCase())}
+                              >
+                                {IconComponent && <IconComponent className={`w-5 h-5 ${iconColor}`} />}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* View Creative */}
+                    {ad.snapshot_url && (
+                      <button
+                        onClick={() => openPreview(ad)}
+                        className="w-full py-3 px-5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-medium transition-all flex items-center justify-center gap-2.5 shadow-md hover:shadow-lg active:scale-98"
+                      >
+                        <Eye className="h-4.5 w-4.5" />
+                        View Ad Creative
+                        <ExternalLink className="h-4 w-4 opacity-80" />
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
